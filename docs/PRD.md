@@ -17,7 +17,7 @@ Status: draft 1. Stage designs are decided one at a time (see [Design log](#desi
 ## 3. Non-goals (v1)
 
 - A web UI. Terminal only.
-- Answering from the featherweight source code, issues or PRs. Docs only, to start (see open question Q1).
+- Answering from the featherweight source code, its skill, issues or PRs. Docs, changelog and examples only.
 - Multi-user hosting, auth, or a managed service.
 - Fine-tuning any model.
 - Cross-framework answers (comparisons with LangGraph and so on) beyond what the docs themselves say.
@@ -102,9 +102,9 @@ LlamaIndex is the default for ingestion, but each stage can use something else i
 
 ## 10. Open questions
 
-- **Q1. Corpus scope.** Docs only, or also `examples/`, the `skills/featherweight` skill, and docstrings from `src/`? The skill and the examples are likely very good sources for code generation.
-- **Q2. Which LLM** for the chat agent by default (Gemini, hosted Gemma, Claude)? Needs an API key, or should it run fully local through Ollama?
-- **Q3. How embeddings run:** `sentence-transformers` in-process (pulls in torch) or Ollama (lighter Python deps, a second process).
+- ~~**Q1. Corpus scope.**~~ Decided, see the design log. Original question: Docs only, or also `examples/`, the `skills/featherweight` skill, and docstrings from `src/`? The skill and the examples are likely very good sources for code generation.
+- ~~**Q2. Which LLM**~~ Decided (Haiku 5.5). Original question: for the chat agent by default (Gemini, hosted Gemma, Claude)? Needs an API key, or should it run fully local through Ollama?
+- ~~**Q3. How embeddings run:**~~ Decided (Ollama). Original question: `sentence-transformers` in-process (pulls in torch) or Ollama (lighter Python deps, a second process).
 - **Q4. How far code validation goes:** syntax and imports only, or actually executing the snippet in a sandbox with a fake model.
 - **Q5. Retrieval as a tool vs. always-on.** Does the agent call a `search_docs` tool when it decides to, or is retrieval run on every turn before the model?
 - **Q6. Distribution.** `uv tool install` / PyPI later; for now run from the repo.
@@ -125,4 +125,8 @@ We will go through the stages in this order, and write the decision and the reas
 
 | Stage | Decision | Why |
 |---|---|---|
-| (none yet) | | |
+| UI | Terminal only, rendered with Rich (Textual only if Rich feels cramped). The core (ingest, retrieval, agent) has no UI code, so a web UI over AG-UI can come later. | Lighter to build and run; the RAG stages are the hard part. |
+| Diagrams | The agent draws simple text/markdown diagrams, not Mermaid. | A terminal cannot render Mermaid. |
+| Corpus | Docs (book, guides, specs), `CHANGELOG.md` and `examples/`. Not the skill, not source docstrings (for now). | The changelog answers "what changed in version X"; examples ground code generation. |
+| Chat model | Claude Haiku 5.5 (`claude-haiku-5-5`) for the demo. Any featherweight-supported model can be swapped in. | Shows featherweight's provider flexibility. |
+| Embeddings | EmbeddingGemma through Ollama, so local. | Mixing a local embedder with a hosted chat model is itself a good demo. |

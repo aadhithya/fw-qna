@@ -141,7 +141,7 @@ def to_nodes(items: list[dict], tag: str, repo: str) -> list[TextNode]:
     for it in items:
         leaf = it["headings"][-1] if it["headings"] else ""
         kind = "tree" if it.get("dir") else "blob"
-        url = f"{repo}/{kind}/{tag}/{it['path']}" + (f"#{slug(leaf)}" if leaf and it["headings"][0] != it["title"] else "")
+        url = f"{repo}/{kind}/{tag}/{it['path']}" + (f"#{slug(leaf)}" if leaf and leaf != it["title"] else "")
         n = TextNode(id_=str(uuid.uuid4()), text=it["text"], metadata={
             "version": tag, "layer": it["layer"], "title": it["title"],
             "breadcrumb": " > ".join([it["title"], *[h for h in it["headings"] if h != it["title"]]]),

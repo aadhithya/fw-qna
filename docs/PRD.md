@@ -92,15 +92,21 @@ LlamaIndex is the default for ingestion, but each stage can use something else i
 - Generated code gets a check before it is shown: at least a syntax parse and import check; ideally a run against featherweight's fake/test models (see Q4).
 - If the check fails, the agent gets the error and retries, using featherweight's own retry model.
 
-## 9. Success criteria
+## 9. Success criteria and evals
 
-No formal eval set for v1. The app is judged by use and as a demo:
+The app is judged by use and as a demo:
 
 - Answers cite their sources, and the links open the right page at the right tag.
 - Questions the docs do not cover are declined, not invented.
 - Generated code follows the framework's conventions.
 - The first token arrives in under 3 seconds on a laptop with a hosted model, and ingesting the docs takes a few minutes.
 - The whole app is small (about 1,000 lines of our own code) and reads as a clean featherweight example.
+
+**Evals are a final-stage demonstration.** They show that evaluation is available, and are not used to tune the pipeline:
+
+- **Retrieval evals:** a small question set with the expected source pages, scored with recall@k and MRR.
+- **Generation evals:** a separate topic, designed at the end.
+- We report the numbers. We do not change chunking, embeddings or prompts to improve them.
 
 ## 10. Open questions
 
@@ -123,7 +129,7 @@ We will go through the stages in this order, and write the decision and the reas
 6. Retrieval
 7. Generation and the chat agent (Q2, Q4, Q5)
 8. Chat UI
-9. (dropped) formal evaluation
+9. Evaluation (retrieval: recall@k and MRR; generation: separate design). A demonstration, not for tuning.
 
 | Stage | Decision | Why |
 |---|---|---|
@@ -137,7 +143,7 @@ We will go through the stages in this order, and write the decision and the reas
 | Exclusions | Maintainer docs (`releasing.md`, `development.md`), `book/SUMMARY.md`, `book/STYLE.md`, and `examples/doclearn/samples/` (sample data). | They describe maintaining featherweight or are noise, not usage. |
 | Changelog cleaning | Commit hashes and commit links are stripped; section headings and commit titles stay. | Hashes are noise for embeddings. |
 | Chunking | Sections of 1,000 to 1,500 characters, split at paragraph boundaries, fenced code never split. Sections under about 200 characters merge into a neighbour. No overlap; each chunk stores `prev_id` and `next_id` so retrieval can pull in a neighbour. Breadcrumb, page title and layer are metadata that is included in the embedded text (`url`, `code_paths`, ids are not). Changelog: one chunk per release entry. Examples: one chunk per example directory. | Headings give natural boundaries, so overlap adds little. |
-| Evaluation | No formal eval set for v1. | The project is a demo; judged by use. |
+| Evaluation | Retrieval evals (recall@k, MRR) and later generation evals, done last, as a demonstration. We do not tune the pipeline against them. | Shows that evals are available without turning the project into an optimisation exercise. |
 | Embedding size | EmbeddingGemma 2 (`embeddinggemma-2`, text variant) through Ollama. Use the second-largest Matryoshka dimension (512 if the full size is 768) as a demonstration of MRL. To be confirmed against the model card. | MRL is a showcase here, not an optimisation. |
 | Chat model | Claude Haiku 5.5 (`claude-haiku-5-5`) for the demo. Any featherweight-supported model can be swapped in. | Shows featherweight's provider flexibility. |
 | Retrieval | A `search_docs` tool the agent chooses to call. Not enforced: no output validation for citations. Grounding comes from a clear tool description and a strict system prompt (any question about featherweight must be answered from `search_docs`, never from memory). | Keeps the demo simple, and is the standard RAG shape. If evals show the model skipping the tool, we revisit (a typed `kind` field with `check_output`, see the discussion). |

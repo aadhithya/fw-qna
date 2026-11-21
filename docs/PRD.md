@@ -83,7 +83,7 @@ LlamaIndex is the default for ingestion, but each stage can use something else i
 
 - Streaming answers in the terminal, with a short list of sources (page title, path, version).
 - Multi-turn: follow-ups like "and with Postgres?" work (query rewriting from history).
-- Says "the docs don't cover this" instead of guessing.
+- Says "the docs don't cover this" instead of guessing (a system-prompt rule). The sources list comes from the `search_docs` results in the run, not from what the model claims.
 - Slash commands: `/version`, `/sources`, `/save` (write the last code example to a file), `/clear`, `/quit`.
 
 **Code generation**
@@ -106,7 +106,7 @@ LlamaIndex is the default for ingestion, but each stage can use something else i
 - ~~**Q2. Which LLM**~~ Decided (Haiku 5.5). Original question: for the chat agent by default (Gemini, hosted Gemma, Claude)? Needs an API key, or should it run fully local through Ollama?
 - ~~**Q3. How embeddings run:**~~ Decided (Ollama). Original question: `sentence-transformers` in-process (pulls in torch) or Ollama (lighter Python deps, a second process).
 - **Q4. How far code validation goes:** syntax and imports only, or actually executing the snippet in a sandbox with a fake model.
-- **Q5. Retrieval as a tool vs. always-on.** Does the agent call a `search_docs` tool when it decides to, or is retrieval run on every turn before the model?
+- ~~**Q5. Retrieval as a tool vs. always-on.**~~ Decided (tool, not enforced). Original question: Does the agent call a `search_docs` tool when it decides to, or is retrieval run on every turn before the model?
 - **Q6. Distribution.** `uv tool install` / PyPI later; for now run from the repo.
 
 ## 11. Design log
@@ -129,4 +129,5 @@ We will go through the stages in this order, and write the decision and the reas
 | Diagrams | The agent draws simple text/markdown diagrams, not Mermaid. | A terminal cannot render Mermaid. |
 | Corpus | Docs (book, guides, specs), `CHANGELOG.md` and `examples/`. Not the skill, not source docstrings (for now). | The changelog answers "what changed in version X"; examples ground code generation. |
 | Chat model | Claude Haiku 5.5 (`claude-haiku-5-5`) for the demo. Any featherweight-supported model can be swapped in. | Shows featherweight's provider flexibility. |
+| Retrieval | A `search_docs` tool the agent chooses to call. Not enforced: no output validation for citations. Grounding comes from a clear tool description and a strict system prompt (any question about featherweight must be answered from `search_docs`, never from memory). | Keeps the demo simple, and is the standard RAG shape. If evals show the model skipping the tool, we revisit (a typed `kind` field with `check_output`, see the discussion). |
 | Embeddings | EmbeddingGemma through Ollama, so local. | Mixing a local embedder with a hosted chat model is itself a good demo. |

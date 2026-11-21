@@ -43,7 +43,7 @@ Things we have noticed that affect design:
 ## 6. Versioning
 
 - Each ingestion is **tagged with the featherweight version** (for example `v0.1.0`) and the commit SHA.
-- Ingestion reads a git ref (`--ref v0.1.0`, `--ref main`) and exports the docs from that ref, so the corpus is exactly what shipped. Today the repo has one tag, `v0.1.0`; `main` is labelled as `main@<sha>`, along with the `pyproject.toml` version.
+- Ingestion reads a release tag (`--ref v0.1.0`) and exports the docs from that tag, so the corpus is exactly what shipped. Only tags of the form `vX.Y.Z` are accepted. Branches and bare commits are rejected, so there is no `main` index. Today the repo has one tag, `v0.1.0`.
 - Several versions can sit in the index side by side. Retrieval filters by version; the default is the latest released one. The user can switch with a flag or `/version`.
 - The chat shows the version in its header and in each answer's sources.
 
@@ -73,7 +73,7 @@ LlamaIndex is the default for ingestion, but each stage can use something else i
 
 **Ingestion CLI** (a separate command from the chat)
 
-- `fw-qna ingest --source ../featherweight --ref v0.1.0`
+- `fw-qna ingest --source ../featherweight --ref v0.1.0` (release tags only)
 - `fw-qna versions` lists what is indexed, with doc count, chunk count and date.
 - `fw-qna drop <version>`.
 - Re-ingesting an unchanged version is a no-op (content hashes).
@@ -128,6 +128,9 @@ We will go through the stages in this order, and write the decision and the reas
 | UI | Terminal only, rendered with Rich (Textual only if Rich feels cramped). The core (ingest, retrieval, agent) has no UI code, so a web UI over AG-UI can come later. | Lighter to build and run; the RAG stages are the hard part. |
 | Diagrams | The agent draws simple text/markdown diagrams, not Mermaid. | A terminal cannot render Mermaid. |
 | Corpus | Docs (book, guides, specs), `CHANGELOG.md` and `examples/`. Not the skill, not source docstrings (for now). | The changelog answers "what changed in version X"; examples ground code generation. |
+| Versions | Only release tags (`vX.Y.Z`) are indexed; anything else is rejected. The chat defaults to the latest indexed release. | The docs then always match what users have installed from PyPI. |
+| Changelog | One chunk per release entry, with the version it describes in the metadata (separate from the docs version tag). | "What changed in 0.2?" matches the right entry. |
+| Examples | An example directory (README plus code) is one unit; book code stays attached to the chapter that cites it. | Code only makes sense beside its explanation. |
 | Chat model | Claude Haiku 5.5 (`claude-haiku-5-5`) for the demo. Any featherweight-supported model can be swapped in. | Shows featherweight's provider flexibility. |
 | Retrieval | A `search_docs` tool the agent chooses to call. Not enforced: no output validation for citations. Grounding comes from a clear tool description and a strict system prompt (any question about featherweight must be answered from `search_docs`, never from memory). | Keeps the demo simple, and is the standard RAG shape. If evals show the model skipping the tool, we revisit (a typed `kind` field with `check_output`, see the discussion). |
 | Embeddings | EmbeddingGemma through Ollama, so local. | Mixing a local embedder with a hosted chat model is itself a good demo. |

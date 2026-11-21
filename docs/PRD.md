@@ -61,7 +61,7 @@ user <-> terminal chat <-> featherweight agent <- [retrieve (+rerank)] -+       
 |---|---|---|
 | Parse | markdown to structured nodes; clean noise; keep code fences, tables, headings | LlamaIndex `MarkdownNodeParser`, `markdown-it-py`, `unstructured` |
 | Chunk | split into retrievable units, keep heading path and attached code | LlamaIndex node parsers, `chonkie`, `langchain-text-splitters` |
-| Embed | EmbeddingGemma (300M, runs locally) with its query and document prompts | `sentence-transformers` via LlamaIndex `HuggingFaceEmbedding`; or Ollama |
+| Embed | EmbeddingGemma 2 (runs locally) with its query and document prompts | `sentence-transformers` via LlamaIndex `HuggingFaceEmbedding`; or Ollama |
 | Index | store vectors plus metadata, filter by version | Chroma, LanceDB, Qdrant local, or sqlite-vec; LlamaIndex vector store wrappers |
 | Retrieve | version-filtered, probably hybrid (BM25 + vector), maybe reranked | LlamaIndex retrievers, `bm25s`, a cross-encoder reranker |
 | Generate | answer and code from retrieved context, with citations | featherweight agent and a model it supports (Gemini, Gemma, Claude, OpenAI) |
@@ -94,11 +94,13 @@ LlamaIndex is the default for ingestion, but each stage can use something else i
 
 ## 9. Success criteria
 
-- **Quality:** a small eval set of 30 to 50 questions with expected source pages (retrieval hit rate) and graded answers. Questions include "how do I build X" code requests.
-- **Code:** generated examples pass the check for at least 90% of the code questions in the eval set.
-- **Honesty:** questions about things not in the docs are declined, not invented.
-- **Speed:** the first token in under 3 seconds on a laptop with a hosted model; ingesting the full docs in under a few minutes.
-- **Demo value:** the whole app is under about 1,000 lines of our own code and reads as a clean featherweight example.
+No formal eval set for v1. The app is judged by use and as a demo:
+
+- Answers cite their sources, and the links open the right page at the right tag.
+- Questions the docs do not cover are declined, not invented.
+- Generated code follows the framework's conventions.
+- The first token arrives in under 3 seconds on a laptop with a hosted model, and ingesting the docs takes a few minutes.
+- The whole app is small (about 1,000 lines of our own code) and reads as a clean featherweight example.
 
 ## 10. Open questions
 
@@ -121,7 +123,7 @@ We will go through the stages in this order, and write the decision and the reas
 6. Retrieval
 7. Generation and the chat agent (Q2, Q4, Q5)
 8. Chat UI
-9. Evaluation
+9. (dropped) formal evaluation
 
 | Stage | Decision | Why |
 |---|---|---|
@@ -134,6 +136,9 @@ We will go through the stages in this order, and write the decision and the reas
 | Parsing | LlamaIndex `MarkdownNodeParser` after a cleaning step: strip nav blocks and the "docs for" badge, keep Mermaid blocks, lift `<!-- code: ... -->` markers into a `code_paths` metadata field. Each node carries layer, title, path, version, header path, and a citation URL built from the tag, path and heading anchor (`github.com/<repo>/blob/<tag>/<path>#<anchor>`). | Spike on `v0.1.0`: 527 nodes, no broken code fences, all code paths resolve. |
 | Exclusions | Maintainer docs (`releasing.md`, `development.md`), `book/SUMMARY.md`, `book/STYLE.md`, and `examples/doclearn/samples/` (sample data). | They describe maintaining featherweight or are noise, not usage. |
 | Changelog cleaning | Commit hashes and commit links are stripped; section headings and commit titles stay. | Hashes are noise for embeddings. |
+| Chunking | Sections of 1,000 to 1,500 characters, split at paragraph boundaries, fenced code never split. Sections under about 200 characters merge into a neighbour. No overlap; each chunk stores `prev_id` and `next_id` so retrieval can pull in a neighbour. Breadcrumb, page title and layer are metadata that is included in the embedded text (`url`, `code_paths`, ids are not). Changelog: one chunk per release entry. Examples: one chunk per example directory. | Headings give natural boundaries, so overlap adds little. |
+| Evaluation | No formal eval set for v1. | The project is a demo; judged by use. |
+| Embedding size | EmbeddingGemma 2 (`embeddinggemma-2`, text variant) through Ollama. Use the second-largest Matryoshka dimension (512 if the full size is 768) as a demonstration of MRL. To be confirmed against the model card. | MRL is a showcase here, not an optimisation. |
 | Chat model | Claude Haiku 5.5 (`claude-haiku-5-5`) for the demo. Any featherweight-supported model can be swapped in. | Shows featherweight's provider flexibility. |
 | Retrieval | A `search_docs` tool the agent chooses to call. Not enforced: no output validation for citations. Grounding comes from a clear tool description and a strict system prompt (any question about featherweight must be answered from `search_docs`, never from memory). | Keeps the demo simple, and is the standard RAG shape. If evals show the model skipping the tool, we revisit (a typed `kind` field with `check_output`, see the discussion). |
-| Embeddings | EmbeddingGemma through Ollama, so local. | Mixing a local embedder with a hosted chat model is itself a good demo. |
+| Embeddings | EmbeddingGemma 2 through Ollama, so local. | Mixing a local embedder with a hosted chat model is itself a good demo. |

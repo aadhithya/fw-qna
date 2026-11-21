@@ -1,4 +1,4 @@
-# fw-qa
+# fw-qna
 
 A terminal chat app that answers questions about [featherweight](https://github.com/aadhithya/featherweight) from its own documentation, and writes example code for it.
 

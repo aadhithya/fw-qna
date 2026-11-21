@@ -1,10 +1,10 @@
-# fw-qa: project brief
+# fw-qna: project brief
 
 Status: draft 1. Stage designs are decided one at a time (see [Design log](#design-log)).
 
 ## 1. What it is
 
-`fw-qa` is a command-line RAG chat app over the featherweight documentation. A user opens a terminal chat, asks how something works, and gets a grounded answer with sources. When they ask for code ("how do I build a quick Redis queue for featherweight?") they get a working, idiomatic example.
+`fw-qna` is a command-line RAG chat app over the featherweight documentation. A user opens a terminal chat, asks how something works, and gets a grounded answer with sources. When they ask for code ("how do I build a quick Redis queue for featherweight?") they get a working, idiomatic example.
 
 ## 2. Goals
 
@@ -50,9 +50,9 @@ Things we have noticed that affect design:
 ## 7. Components
 
 ```
-featherweight repo --(git ref)--> [parse] -> [chunk] -> [embed] -> [index]      fw-qa ingest
+featherweight repo --(git ref)--> [parse] -> [chunk] -> [embed] -> [index]      fw-qna ingest
                                                                        |
-user <-> terminal chat <-> featherweight agent <- [retrieve (+rerank)] -+        fw-qa chat
+user <-> terminal chat <-> featherweight agent <- [retrieve (+rerank)] -+        fw-qna chat
                                  |
                           [generate answer / code (+ validate)]
 ```
@@ -73,9 +73,9 @@ LlamaIndex is the default for ingestion, but each stage can use something else i
 
 **Ingestion CLI** (a separate command from the chat)
 
-- `fw-qa ingest --source ../featherweight --ref v0.1.0`
-- `fw-qa versions` lists what is indexed, with doc count, chunk count and date.
-- `fw-qa drop <version>`.
+- `fw-qna ingest --source ../featherweight --ref v0.1.0`
+- `fw-qna versions` lists what is indexed, with doc count, chunk count and date.
+- `fw-qna drop <version>`.
 - Re-ingesting an unchanged version is a no-op (content hashes).
 - No network call is needed to embed; the embedding model runs locally.
 

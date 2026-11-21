@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[project]
+name = "fw-qna"
+version = "0.0.0"
+description = "A terminal RAG chat for the featherweight documentation, built on featherweight."
+license = "MIT"
+requires-python = ">=3.12"
+dependencies = [
+    "llama-index-core",
+]

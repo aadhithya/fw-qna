@@ -1,0 +1,9 @@
+LICENSE
+README.md
+pyproject.toml
+src/fw_qna/__init__.py
+src/fw_qna.egg-info/PKG-INFO
+src/fw_qna.egg-info/SOURCES.txt
+src/fw_qna.egg-info/dependency_links.txt
+src/fw_qna.egg-info/requires.txt
+src/fw_qna.egg-info/top_level.txt

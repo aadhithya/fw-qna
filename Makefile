@@ -8,7 +8,7 @@ DOCKER_RUN = docker run --rm -u $(shell id -u):$(shell id -g) -e HOME=/tmp -e RU
 # The app itself: Ollama and the fw-qna commands run in Docker Compose.
 COMPOSE = FW_QNA_UID=$(shell id -u) FW_QNA_GID=$(shell id -g) COMPOSE_PROFILES=tools docker compose
 MODEL  ?= embeddinggemma-2:270m
-SOURCE ?= ../featherweight
+SOURCE ?= https://github.com/aadhithya/featherweight.git
 need-ref = $(if $(REF),,$(error REF is required, e.g. REF=v0.1.0))
 
 .DEFAULT_GOAL := help
@@ -47,7 +47,7 @@ up: ## start Ollama and pull the embedding model (once)
 down: ## stop Ollama (the data stays)
 	$(COMPOSE) down
 
-ingest: up ## index a release: make ingest REF=v0.1.0 [SOURCE=../featherweight or a git URL]
+ingest: up ## index a release and its skill, from GitHub: make ingest REF=v0.1.0 [SOURCE=<git url or local clone>]
 	$(need-ref)
 	@if echo "$(SOURCE)" | grep -qE '^(https?://|git@)'; then \
 		$(COMPOSE) run --build --rm app ingest --source "$(SOURCE)" --ref $(REF); \

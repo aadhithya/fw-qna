@@ -12,7 +12,7 @@ Everything runs in Docker Compose, driven by `make`. You need Docker and `make`.
 
 ```
 make up                                  # start Ollama and pull the embedding model (once)
-make ingest REF=v0.1.0                   # index a release; SOURCE=<clone path or git URL>, default ../featherweight
+make ingest REF=v0.1.0                   # index a release and its skill, pulled from GitHub; SOURCE=<git url or clone path>
 make versions                            # what is indexed
 make drop REF=v0.1.0                     # remove a release
 make search Q="how do I define an agent"  # try the search, with no chat model (ARGS="--keywords JobWorker")
@@ -20,7 +20,7 @@ make chat                                # the chat; needs ANTHROPIC_API_KEY in 
 make check-embeddings                    # check the real model gives sane vectors
 ```
 
-Only release tags (`vX.Y.Z`) are indexed. The index and the Ollama models live in `./data`, or in the directory set by
+Only release tags (`vX.Y.Z`) are indexed. `make ingest` clones that tag from [featherweight on GitHub](https://github.com/aadhithya/featherweight) (public, no login needed), and takes the docs, the changelog, the examples and the release's own skill (`skills/`) from it, so they always match. The skill is kept in `<data dir>/skills/<tag>/`, and `make drop` removes it with the release. The index and the Ollama models live in `./data`, or in the directory set by
 `FW_QNA_DATA`, so you control where they are. Ingesting the whole `v0.1.0` takes about two minutes on a laptop CPU, and
 running it again with nothing changed takes a few seconds.
 

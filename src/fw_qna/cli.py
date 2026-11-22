@@ -13,6 +13,7 @@ from .embedder import EmbeddingError, OllamaGemmaEmbedding
 from .index import Index
 from .ingest import SourceError, ingest_release
 from .retrieval import LAYERS, Retriever, SearchError
+from .skills import installed_skills, remove_skills
 
 DEFAULT_OLLAMA_URL = "http://localhost:11434"
 
@@ -30,7 +31,7 @@ def build_parser() -> argparse.ArgumentParser:
     init = commands.add_parser("init", help="choose and create the data directory")
     init.add_argument("path", nargs="?", help="the data directory (default: the current setting)")
     ingest = commands.add_parser("ingest", help="index one release of the featherweight docs")
-    ingest.add_argument("--source", required=True, help="a local clone or a git URL of featherweight")
+    ingest.add_argument("--source", required=True, help="a git URL or a local clone of featherweight")
     ingest.add_argument("--ref", required=True, help="a release tag, like v0.1.0 (branches are refused)")
     ingest.add_argument("--repo-url", help="the https address for citation links")
     ingest.add_argument("--force", action="store_true", help="embed again even if nothing changed")
@@ -63,8 +64,10 @@ def main(argv: list[str] | None = None) -> int:
 
 def run(args: argparse.Namespace, data_dir: Path) -> int:
     if args.command == "ingest":
-        nodes = ingest_release(args.source, args.ref, args.repo_url)
+        nodes = ingest_release(args.source, args.ref, args.repo_url, data_dir=data_dir)
         print(f"{args.ref}: {len(nodes)} chunks")
+        skills = installed_skills(data_dir, args.ref)
+        print(f"skills: {', '.join(skills)}" if skills else "skills: none in this release")
         outcome = Index(index_path(data_dir), make_embedder()).add_release(args.ref, nodes, force=args.force)
         print("already indexed, nothing changed" if outcome == "unchanged" else "indexed")
     elif args.command == "versions":
@@ -89,6 +92,7 @@ def run(args: argparse.Namespace, data_dir: Path) -> int:
             print("no results")
     elif args.command == "drop":
         removed = Index(index_path(data_dir), make_embedder()).drop(args.ref)
+        remove_skills(data_dir, args.ref)
         print(f"removed {args.ref}" if removed else f"{args.ref} is not indexed")
         return 0 if removed else 1
     elif args.command == "init":

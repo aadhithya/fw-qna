@@ -10,6 +10,7 @@ from llama_index.core.base.embeddings.base import BaseEmbedding
 from . import __version__
 from .config import ConfigError, resolve_data_dir, write_user_config
 from .embedder import EmbeddingError, OllamaGemmaEmbedding
+from .evals import EvalError, evaluate, format_report, load_questions
 from .index import Index
 from .ingest import SourceError, ingest_release
 from .retrieval import LAYERS, Retriever, SearchError
@@ -43,6 +44,9 @@ def build_parser() -> argparse.ArgumentParser:
     search.add_argument("--layer", choices=LAYERS)
     search.add_argument("--version", help="a release tag; the default is the latest indexed one")
     search.add_argument("--top-k", type=int, default=5)
+    evaluate_ = commands.add_parser("eval", help="measure retrieval: recall@k and MRR over a file of questions")
+    evaluate_.add_argument("--questions", required=True, help="the question file, like evals/retrieval.yaml")
+    evaluate_.add_argument("--version", help="override the release named in the file")
     drop = commands.add_parser("drop", help="remove one release from the index")
     drop.add_argument("ref", help="the release tag, like v0.1.0")
     return parser
@@ -57,7 +61,7 @@ def main(argv: list[str] | None = None) -> int:
     data_dir = resolve_data_dir(args.data_dir)
     try:
         return run(args, data_dir)
-    except (SourceError, EmbeddingError, SearchError, ConfigError) as error:
+    except (SourceError, EmbeddingError, SearchError, ConfigError, EvalError) as error:
         print(f"error: {error}", file=sys.stderr)
         return 1
 
@@ -90,6 +94,10 @@ def run(args: argparse.Namespace, data_dir: Path) -> int:
             print("   " + hit.text[:160].replace("\n", " "))
         if not hits:
             print("no results")
+    elif args.command == "eval":
+        version, questions = load_questions(Path(args.questions))
+        retriever = Retriever(Index(index_path(data_dir), make_embedder()))
+        print(format_report(evaluate(retriever, args.version or version, questions)))
     elif args.command == "drop":
         removed = Index(index_path(data_dir), make_embedder()).drop(args.ref)
         remove_skills(data_dir, args.ref)

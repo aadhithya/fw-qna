@@ -6,3 +6,6 @@ __pycache__/
 data/
 .index/
 .cache/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/

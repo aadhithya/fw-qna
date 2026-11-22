@@ -18,6 +18,7 @@ from rich.live import Live
 from rich.markdown import Markdown
 from rich.panel import Panel
 from rich.rule import Rule
+from rich.segment import Segment
 from rich.text import Text
 
 from .config import Settings
@@ -37,6 +38,24 @@ HELP = [
     ("/clear", "start the conversation again"),
     ("/exit", "leave (Ctrl-D works too)"),
 ]
+
+
+class Tail:
+    """The end of a markdown text, only as many lines as fit on the screen.
+
+    A live display cannot move the cursor above the top of the screen, so when it grows taller than the terminal
+    each redraw leaves a copy of the text behind. Showing only the last screenful keeps it from ever growing that
+    tall. The whole text is printed once, normally, when the answer is complete.
+    """
+
+    def __init__(self, text: str) -> None:
+        self.text = text
+
+    def __rich_console__(self, console: Console, options):
+        room = max(console.size.height - 3, 3)
+        for line in console.render_lines(Markdown(self.text), options, pad=False)[-room:]:
+            yield from line
+            yield Segment.line()
 
 
 @dataclass
@@ -125,7 +144,8 @@ class ChatUI:
                 status.stop()
                 status_on = False
             if live is not None:
-                live.stop()
+                live.stop()  # transient: the live view disappears, and the whole text is printed once, below
+                self.console.print(Markdown(segment))
                 live = None
             segment = ""
 
@@ -147,10 +167,10 @@ class ChatUI:
                         status.stop()
                         status_on = False
                     if live is None:
-                        live = Live(console=self.console, refresh_per_second=10, vertical_overflow="visible")
+                        live = Live(console=self.console, refresh_per_second=10, transient=True)
                         live.start()
                     segment += event.text
-                    live.update(Markdown(segment))
+                    live.update(Tail(segment))
                 elif isinstance(event, Finished):
                     stop_all()
                     self.last_answer = event.text

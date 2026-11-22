@@ -35,7 +35,7 @@ async def _chat(data_dir: Path, index: Index, console: Console) -> None:
 
     settings = Settings.load(data_dir)
     async with SqliteDatabase(data_dir / "runs.db") as db:
-        session = ChatSession(AgentRunner(db), Retriever(index), settings)
+        session = ChatSession(AgentRunner(db), Retriever(index), settings, data_dir=data_dir)
         ui = ChatUI(session, settings, data_dir, console)
         prompt = PromptSession(history=InMemoryHistory())  # the history lives for this session only
         message = [(f"fg:{ui.theme.user} bold", "❯ ")]

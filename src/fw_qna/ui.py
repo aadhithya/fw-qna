@@ -23,7 +23,7 @@ from rich.text import Text
 
 from .config import Settings
 from .retrieval import SearchError
-from .session import Cancelled, ChatSession, Failed, Finished, Searched, Searching, TextDelta
+from .session import Cancelled, ChatSession, Failed, Finished, Searched, Searching, SkillRead, TextDelta
 from .theme import Theme
 
 CODE_BLOCK = re.compile(r"```(\w*)[^\n]*\n(.*?)```", re.S)
@@ -80,7 +80,9 @@ class ChatUI:
         body.append("fw-qna", style=f"bold {t.assistant}")
         body.append("  ·  questions and example code for featherweight\n", style=t.muted)
         body.append(f"docs {current}", style=t.accent)
-        body.append(f"  ·  {self.model_name}  ·  context limit {self.settings.context_limit:,} tokens\n", style=t.muted)
+        skills = f"  ·  skill {', '.join(self.session.skill_names)}" if self.session.skill_names else ""
+        limit = f"context limit {self.settings.context_limit:,} tokens"
+        body.append(f"{skills}  ·  {self.model_name}  ·  {limit}\n", style=t.muted)
         body.append("Ask anything about featherweight. ", style="")
         body.append("/help", style=t.accent)
         body.append(" lists the commands, ", style="")
@@ -162,6 +164,12 @@ class ChatUI:
                         status_on = False
                     self.console.print(Text(f"  {self._searched_line(last_search, event)}", style=t.muted))
                     start_status("thinking…")
+                elif isinstance(event, SkillRead):
+                    if status_on:
+                        status.stop()
+                        status_on = False
+                    self.console.print(Text(f"  read skill: {event.name} ({event.file})", style=t.muted))
+                    start_status("thinking…")
                 elif isinstance(event, TextDelta):
                     if status_on:
                         status.stop()
@@ -191,6 +199,9 @@ class ChatUI:
 
     @staticmethod
     def _searching_label(event: Searching) -> str:
+        if event.tool == "get_skill":
+            name, resource = event.args.get("name", "the"), event.args.get("resource")
+            return f"reading skill file {resource}" if resource else f"reading the {name} skill"
         query = event.args.get("query", "")
         where = "the conversation" if event.tool == "search_history" else "the docs"
         keywords = event.args.get("keywords")
@@ -209,10 +220,12 @@ class ChatUI:
     def finished(self, done: Finished) -> None:
         t = self.theme
         self.console.print()
-        if done.cited:
+        if done.cited or done.skills_read:
             self.console.print(Text("Sources", style=f"bold {t.muted}"))
             for citation in done.cited:
                 self._print_source(citation)
+            for read in done.skills_read:
+                self._print_skill(read)
         if done.unverified:
             numbers = ", ".join(f"[{n}]" for n in done.unverified)
             self.console.print(Text(f"  {numbers} cited, but no search returned it: unverified", style=t.error))
@@ -224,6 +237,15 @@ class ChatUI:
         if done.offloaded:
             line += f"  ·  moved {done.offloaded} earlier messages to the archive (the model can search them)"
         self.console.print(Text(line, style=f"dim {t.muted}"))
+
+    def _print_skill(self, read: SkillRead) -> None:
+        t = self.theme
+        line = Text("  ")
+        line.append("skill", style=f"bold {t.accent}")
+        line.append(f" {read.name}  ·  {read.file}", style="")
+        self.console.print(line)
+        if read.url:
+            self.console.print(Text(f"      ↗ {read.url}", style=f"dim {t.muted}"))
 
     def _print_source(self, citation) -> None:
         t = self.theme
@@ -271,10 +293,12 @@ class ChatUI:
 
     def _sources(self, _: str) -> None:
         citations = self.session.doc_search.citations
-        if not citations:
+        if not citations and not self.session.skills_read:
             return self._say("no sources yet: nothing has been searched.")
         for citation in citations.values():
             self._print_source(citation)
+        for read in self.session.skills_read:
+            self._print_skill(read)
 
     def _version(self, argument: str) -> None:
         releases = [r.version for r in self.session.retriever.index.releases()]
@@ -282,13 +306,13 @@ class ChatUI:
             current = self.session.doc_search.version or f"{releases[-1]} (the latest)"
             return self._say(f"answering from {current}. indexed: {', '.join(releases)}")
         if argument == "latest":
-            self.session.doc_search.version = None
+            self.session.set_version(None)
             return self._say(f"answering from {releases[-1]}, the latest")
         try:
             version = self.session.retriever.resolve_version(argument)
         except (SearchError, ValueError) as error:
             return self._say(str(error), self.theme.error)
-        self.session.doc_search.version = version
+        self.session.set_version(version)  # the release's own skills come with it
         self._say(f"answering from {version}")
 
     def _context(self, argument: str) -> None:

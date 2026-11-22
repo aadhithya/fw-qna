@@ -1,0 +1,11 @@
+#!/bin/sh
+# Conventional commits: type(scope)!: description
+first_line=$(head -n1 "$1")
+case "$first_line" in
+  Merge\ *|Revert\ *) exit 0 ;;
+esac
+if ! printf '%s' "$first_line" | grep -Eq '^(feat|fix|docs|chore|refactor|test|ci|build|perf|style|revert)(\([a-z0-9._/-]+\))?!?: .+'; then
+  echo "commit-msg: use a conventional commit, e.g. 'feat(index): add the version filter'" >&2
+  echo "  types: feat fix docs chore refactor test ci build perf style revert" >&2
+  exit 1
+fi

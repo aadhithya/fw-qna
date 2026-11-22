@@ -24,7 +24,8 @@ fmt: image ## ruff fix and format
 test: image ## run the tests
 	$(DOCKER_RUN) pytest -q -p no:cacheprovider
 
-check: lint test ## lint and test (what the hooks and CI run)
+check: lint test ## lint and test (what the pre-commit hooks run)
 
-hooks: ## use the hooks in .githooks for this clone (worktrees share the setting)
-	git config core.hooksPath .githooks
+hooks: ## install the pre-commit hooks for this clone (worktrees share them)
+	@git config --unset-all core.hooksPath || true
+	pre-commit install

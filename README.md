@@ -8,10 +8,10 @@ It is also a demonstration: the chat agent is built on featherweight itself.
 
 ## Development
 
-Everything that runs code runs in Docker, so nothing is installed on your machine. You need Docker and `make`.
+Everything that runs code runs in Docker, so nothing is installed on your machine. You need Docker, `make` and [pre-commit](https://pre-commit.com). There is no CI: the checks run locally, before each commit.
 
 ```
-make hooks   # once per clone: ruff and the tests run before each commit
+make hooks   # once per clone: installs the pre-commit hooks (needs the pre-commit tool)
 make check   # lint, format check and tests
 make fmt     # fix formatting
 ```

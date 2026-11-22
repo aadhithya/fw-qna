@@ -63,16 +63,20 @@ class DocSearch:
 
     def __init__(self, retriever: Retriever) -> None:
         self.retriever = retriever
+        self.version: str | None = None  # the release this conversation is about; None means the latest
         self.citations: dict[int, Citation] = {}  # by reference number, in the order they were found
         self._ref_of: dict[str, int] = {}  # chunk id -> its number
+
+    def reset(self) -> None:
+        """Forget the sources found so far, when the conversation starts again."""
+        self.citations.clear()
+        self._ref_of.clear()
 
     def _ref(self, hit: Hit) -> int:
         if hit.id not in self._ref_of:
             ref = len(self._ref_of) + 1
             self._ref_of[hit.id] = ref
-            self.citations[ref] = Citation(
-                ref, hit.id, hit.breadcrumb, hit.layer, hit.version, hit.path, hit.url
-            )
+            self.citations[ref] = Citation(ref, hit.id, hit.breadcrumb, hit.layer, hit.version, hit.path, hit.url)
         return self._ref_of[hit.id]
 
     async def search(
@@ -86,14 +90,12 @@ class DocSearch:
         """The tool's result: JSON text, which the model reads and the interface parses."""
         try:
             hits = await self.retriever.asearch(
-                query, keywords=keywords, layer=layer, version=version, top_k=top_k
+                query, keywords=keywords, layer=layer, version=version or self.version, top_k=top_k
             )
         except SearchError as error:
             return json.dumps({"error": str(error)})
         if not hits:
-            return json.dumps(
-                {"results": [], "note": "Nothing matched. Try other words, other keywords, or no layer."}
-            )
+            return json.dumps({"results": [], "note": "Nothing matched. Try other words, other keywords, or no layer."})
         results = [
             {
                 "ref": self._ref(hit),

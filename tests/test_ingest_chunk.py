@@ -23,9 +23,7 @@ def test_nav_blocks_and_badges_are_removed():
 
 
 def test_commit_hashes_and_links_are_removed():
-    out = clean_changelog(
-        "* a thing ([abcdef1](https://x/commit/abcdef1)), closes [#1](https://x/issues/1)\n"
-    )
+    out = clean_changelog("* a thing ([abcdef1](https://x/commit/abcdef1)), closes [#1](https://x/issues/1)\n")
     assert out.strip() == "* a thing"
 
 

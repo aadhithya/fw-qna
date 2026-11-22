@@ -83,6 +83,7 @@ render Mermaid.
 | `make drop REF=v0.1.0` | remove a release, with its skill, from the index |
 | `make search Q="..."` | try the search with no chat model. `ARGS="--keywords JobWorker"` adds exact names to match |
 | `make chat` | chat about the docs |
+| `make eval` | measure retrieval over [evals/retrieval.yaml](evals/retrieval.yaml): recall@k and MRR. Local only, no chat model |
 | `make check-embeddings` | check that the real embedding model gives sane vectors |
 | `make down` | stop Ollama (your data stays) |
 
@@ -138,6 +139,25 @@ log; `ChatInput.from_langchain` and `run.new_messages` to keep the conversation;
 usage on each reply to know how full the context is.
 
 The design, the decisions and the reasons behind them are in [docs/PRD.md](docs/PRD.md).
+
+## Retrieval quality
+
+`make eval` runs 20 questions with the pages that answer them ([evals/retrieval.yaml](evals/retrieval.yaml)) through the
+same search the chat uses, and measures where the first good page lands. A question counts as found at *k* when one of its
+acceptable pages is among the first *k* results; MRR is the average of 1 / (that rank). It needs only the local embedding
+model, so it costs nothing and makes no API calls.
+
+On the `v0.1.0` docs, as of version 1.0.0:
+
+| recall@1 | recall@3 | recall@5 | recall@10 | MRR |
+|---|---|---|---|---|
+| 0.80 | 0.95 | 0.95 | 0.95 | 0.875 |
+
+17 of the 20 questions have a good page at rank 1. The one miss is "What changed in the first release?": the changelog is a
+single chunk that the search does not surface for that wording, and the chat gets around it because the tool description
+tells the model to use the `changelog` layer for questions about releases. The questions were written from the docs' titles
+and headings, not from what the search returns, and the pipeline is not tuned against them: this is a measurement, not a
+target. Evaluating the generated answers would need real model calls, so it is not done yet.
 
 ## Limits
 

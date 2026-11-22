@@ -1,0 +1,160 @@
+# The retrieval eval: questions a user might ask, and the pages that answer them.
+#
+# For each question, `expected` lists every page that would be a good answer: the guide, the spec, a book chapter
+# or an example, whichever cover the topic. A question counts as found when any one of them is among the top k
+# results. `keywords` are the exact names an agent would pass to search_docs (the question is searched with
+# them, as the chat does).
+#
+# The pages were chosen from the titles and headings of the docs, not from what the search returns. The eval
+# is a measurement, not a target: do not change the questions or the pipeline to make the numbers better.
+# Run it with `make eval`. Edit freely: a wrong expectation is a bug in this file.
+
+version: v0.1.0
+
+questions:
+  - id: define-agent
+    question: How do I define an agent?
+    expected:
+      - docs/agents.md
+      - docs/specs/agents.md
+      - docs/getting-started.md
+      - docs/book/01-your-first-agent/02-a-typed-agent.md
+
+  - id: run-agent-result
+    question: How do I run an agent and read its result?
+    expected:
+      - docs/agents.md
+      - docs/getting-started.md
+      - docs/book/01-your-first-agent/03-running-it.md
+
+  - id: check-output
+    question: How do I reject an answer that the output schema cannot catch?
+    keywords: [check_output]
+    expected:
+      - docs/agents.md
+      - docs/getting-started.md
+      - docs/book/01-your-first-agent/05-failures-and-check-output.md
+
+  - id: choose-provider
+    question: How do I switch to another model provider, like Claude or OpenAI?
+    expected:
+      - docs/models.md
+      - docs/specs/models.md
+      - docs/book/01-your-first-agent/06-choosing-a-model.md
+
+  - id: ollama
+    question: How do I add support for Ollama models?
+    keywords: [Ollama]
+    expected:
+      - docs/models.md
+      - docs/specs/models.md
+
+  - id: mcp-tools
+    question: How do I give an agent the tools of an MCP server?
+    expected:
+      - docs/mcp.md
+      - docs/specs/mcp-tools.md
+      - docs/book/02-abilities/02-mcp.md
+      - examples/mcp
+
+  - id: skills
+    question: How do I give an agent skills?
+    expected:
+      - docs/skills.md
+      - docs/specs/skills.md
+      - docs/book/02-abilities/03-skills.md
+      - examples/skills
+
+  - id: sub-agents
+    question: How can an agent launch other agents?
+    expected:
+      - docs/launching-agents.md
+      - docs/book/02-abilities/04-sub-agents.md
+      - examples/launching
+
+  - id: submit-job
+    question: How do I submit a job and have a worker run it?
+    expected:
+      - docs/submitted-jobs.md
+      - docs/specs/submitted-jobs.md
+      - docs/book/05-in-production/01-submit-and-a-worker.md
+      - examples/jobs
+
+  - id: several-workers
+    question: How many workers can I run on one queue?
+    keywords: [JobWorker]
+    expected:
+      - docs/submitted-jobs.md
+      - docs/book/05-in-production/02-several-workers.md
+      - docs/specs/submitted-jobs.md
+
+  - id: resume-job
+    question: How do I resume a job that failed?
+    expected:
+      - docs/persistence.md
+      - docs/agents.md
+      - docs/book/03-jobs-and-pipelines/04-resume.md
+      - examples/resume
+
+  - id: streaming-chat
+    question: How do I build a chat agent that streams its answer?
+    expected:
+      - docs/streaming.md
+      - docs/specs/streaming.md
+      - docs/book/04-chat/01-a-streaming-agent.md
+      - examples/chat
+
+  - id: stop-response
+    question: How do I stop a streaming response while it is being written?
+    expected:
+      - docs/streaming.md
+      - docs/book/04-chat/03-stopping-and-the-conversation.md
+      - examples/chat
+
+  - id: opentelemetry
+    question: How do I send traces to OpenTelemetry?
+    keywords: [OTelObserver]
+    expected:
+      - docs/observability.md
+      - docs/specs/observability.md
+      - docs/book/05-in-production/04-observability.md
+      - examples/observability
+
+  - id: own-queue
+    question: How do I write my own job queue?
+    expected:
+      - docs/book/06-bring-your-own-storage/03-a-job-queue.md
+      - docs/submitted-jobs.md
+      - docs/specs/submitted-jobs.md
+
+  - id: postgres
+    question: How do I use Postgres instead of SQLite?
+    expected:
+      - docs/book/06-bring-your-own-storage/01-postgres.md
+      - docs/persistence.md
+      - docs/production-stack.md
+
+  - id: background-agent
+    question: How does a chat start an agent in the background and carry on?
+    expected:
+      - docs/background-agents.md
+      - docs/specs/background-agents.md
+      - docs/book/05-in-production/03-background-agents.md
+      - examples/background
+
+  - id: first-release
+    question: What changed in the first release?
+    expected:
+      - CHANGELOG.md
+
+  - id: guide-vs-spec
+    question: What is the difference between a guide and a spec in the docs?
+    expected:
+      - docs/README.md
+      - docs/specs/README.md
+
+  - id: philosophy
+    question: What is the philosophy behind featherweight?
+    expected:
+      - docs/book/00-start-here/03-philosophy.md
+      - docs/book/00-start-here/01-what-it-is.md

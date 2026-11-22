@@ -63,9 +63,7 @@ class OllamaGemmaEmbedding(BaseEmbedding):
 
     def _embed(self, texts: list[str]) -> list[list[float]]:
         try:
-            with httpx.Client(
-                base_url=self.base_url, timeout=self.timeout, transport=self.transport
-            ) as client:
+            with httpx.Client(base_url=self.base_url, timeout=self.timeout, transport=self.transport) as client:
                 response = client.post("/api/embed", json={"model": self.model_name, "input": texts})
         except httpx.HTTPError as error:
             raise EmbeddingError(f"cannot reach Ollama at {self.base_url}: {error}") from error

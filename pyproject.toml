@@ -12,6 +12,8 @@ description = "A terminal RAG chat for the featherweight documentation, built on
 license = "MIT"
 requires-python = ">=3.12"
 dependencies = [
+    "bm25s",
+    "featherweight[anthropic]>=0.1.0",
     "httpx",
     "lancedb",
     "langchain-core",
@@ -30,7 +32,7 @@ asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 
 [tool.ruff]
-line-length = 110
+line-length = 120
 src = ["src", "tests"]
 
 [tool.ruff.lint]

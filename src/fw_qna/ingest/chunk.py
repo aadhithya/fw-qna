@@ -148,9 +148,7 @@ def page_pieces(root: Path) -> list[Piece]:
         code_paths = [f"docs/book/{m}" for m in CODE_MARKER.findall(node.text)]
         text = CODE_MARKER.sub("", node.text).strip()
         for chunk in pack(text):
-            pieces.append(
-                Piece(chunk, path, node.metadata["title"], layer_of(path), list(headings), code_paths)
-            )
+            pieces.append(Piece(chunk, path, node.metadata["title"], layer_of(path), list(headings), code_paths))
             code_paths = []  # the link belongs to the first chunk of the section
     return merge_small(pieces)
 

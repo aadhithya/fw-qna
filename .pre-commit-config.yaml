@@ -1,0 +1,24 @@
+# The checks run locally, in Docker, so nothing is installed on the host and there is no CI.
+# Install once per clone with: make hooks
+default_install_hook_types: [pre-commit, commit-msg]
+
+repos:
+  - repo: local
+    hooks:
+      - id: ruff
+        name: ruff lint and format check (docker)
+        entry: make --no-print-directory lint
+        language: system
+        files: ^(src|tests)/.*\.py$|^pyproject\.toml$
+        pass_filenames: false
+      - id: tests
+        name: tests (docker)
+        entry: make --no-print-directory test
+        language: system
+        files: ^(src|tests)/.*\.py$|^pyproject\.toml$|^Dockerfile\.dev$
+        pass_filenames: false
+      - id: conventional-commit
+        name: conventional commit message
+        entry: scripts/check_commit_msg.sh
+        language: system
+        stages: [commit-msg]

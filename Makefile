@@ -11,7 +11,7 @@ SOURCE ?= ../featherweight
 need-ref = $(if $(REF),,$(error REF is required, e.g. REF=v0.1.0))
 
 .DEFAULT_GOAL := help
-.PHONY: help image lint fmt test check hooks up down ingest versions drop check-embeddings
+.PHONY: help image lint fmt test check hooks up down ingest versions drop search check-embeddings
 
 help: ## show the targets
 	@grep -E '^[a-z-]+:.*##' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  make %-17s %s\n", $$1, $$2}'
@@ -49,17 +49,20 @@ down: ## stop Ollama (the data stays)
 ingest: up ## index a release: make ingest REF=v0.1.0 [SOURCE=../featherweight or a git URL]
 	$(need-ref)
 	@if echo "$(SOURCE)" | grep -qE '^(https?://|git@)'; then \
-		$(COMPOSE) run --rm app ingest --source "$(SOURCE)" --ref $(REF); \
+		$(COMPOSE) run --build --rm app ingest --source "$(SOURCE)" --ref $(REF); \
 	else \
-		$(COMPOSE) run --rm -v "$$(cd $(SOURCE) && pwd)":/source:ro app ingest --source /source --ref $(REF); \
+		$(COMPOSE) run --build --rm -v "$$(cd $(SOURCE) && pwd)":/source:ro app ingest --source /source --ref $(REF); \
 	fi
 
 versions: ## list the indexed releases
-	$(COMPOSE) run --rm app versions
+	$(COMPOSE) run --build --rm app versions
 
 drop: ## remove a release from the index: make drop REF=v0.1.0
 	$(need-ref)
-	$(COMPOSE) run --rm app drop $(REF)
+	$(COMPOSE) run --build --rm app drop $(REF)
+
+search: up ## search the docs, no chat model: make search Q="how do I define an agent" [ARGS="--keywords JobWorker"]
+	$(COMPOSE) run --build --rm app search "$(Q)" $(ARGS)
 
 check-embeddings: up ## check that the real model gives sane vectors
-	$(COMPOSE) run --rm -v "$(CURDIR)/scripts":/scripts:ro --entrypoint python app /scripts/check_embeddings.py
+	$(COMPOSE) run --build --rm -v "$(CURDIR)/scripts":/scripts:ro --entrypoint python app /scripts/check_embeddings.py

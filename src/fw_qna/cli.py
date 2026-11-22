@@ -12,6 +12,7 @@ from .config import resolve_data_dir, write_user_config
 from .embedder import EmbeddingError, OllamaGemmaEmbedding
 from .index import Index
 from .ingest import SourceError, ingest_release
+from .retrieval import LAYERS, Retriever, SearchError
 
 DEFAULT_OLLAMA_URL = "http://localhost:11434"
 
@@ -34,6 +35,12 @@ def build_parser() -> argparse.ArgumentParser:
     ingest.add_argument("--repo-url", help="the https address for citation links")
     ingest.add_argument("--force", action="store_true", help="embed again even if nothing changed")
     commands.add_parser("versions", help="list the indexed releases")
+    search = commands.add_parser("search", help="search the docs and print what comes back (no model)")
+    search.add_argument("query")
+    search.add_argument("--keywords", nargs="*", help="exact code names to match")
+    search.add_argument("--layer", choices=LAYERS)
+    search.add_argument("--version", help="a release tag; the default is the latest indexed one")
+    search.add_argument("--top-k", type=int, default=5)
     drop = commands.add_parser("drop", help="remove one release from the index")
     drop.add_argument("ref", help="the release tag, like v0.1.0")
     return parser
@@ -48,7 +55,7 @@ def main(argv: list[str] | None = None) -> int:
     data_dir = resolve_data_dir(args.data_dir)
     try:
         return run(args, data_dir)
-    except (SourceError, EmbeddingError) as error:
+    except (SourceError, EmbeddingError, SearchError) as error:
         print(f"error: {error}", file=sys.stderr)
         return 1
 
@@ -65,6 +72,16 @@ def run(args: argparse.Namespace, data_dir: Path) -> int:
             print("Nothing is indexed yet. Run: fw-qna ingest --source <featherweight> --ref v0.1.0")
         for info in index.releases():
             print(f"{info.version} {info.chunks} chunks  {info.model} {info.dimensions}d {info.ingested_at}")
+    elif args.command == "search":
+        retriever = Retriever(Index(index_path(data_dir), make_embedder()))
+        hits = retriever.search(
+            args.query, keywords=args.keywords, layer=args.layer, version=args.version, top_k=args.top_k
+        )
+        for number, hit in enumerate(hits, 1):
+            print(f"{number}. [{hit.layer}] {hit.breadcrumb}  ({hit.score:.3f})\n   {hit.url}")
+            print("   " + hit.text[:160].replace("\n", " "))
+        if not hits:
+            print("no results")
     elif args.command == "drop":
         removed = Index(index_path(data_dir), make_embedder()).drop(args.ref)
         print(f"removed {args.ref}" if removed else f"{args.ref} is not indexed")

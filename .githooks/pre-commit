@@ -1,0 +1,7 @@
+#!/bin/sh
+# Lint, format check and tests, all in Docker. Install with: make hooks
+if ! docker info >/dev/null 2>&1; then
+  echo "pre-commit: Docker is not running. Start it, then commit again." >&2
+  exit 1
+fi
+exec make --no-print-directory check

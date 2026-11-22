@@ -203,7 +203,7 @@ def retriever(tmp_path, release_tree, words_embedding):
 def make(runner, retriever):
     sessions = []
 
-    def factory(steps, *, limit=100_000, keep_turns=4, pause=0.0):
+    def factory(steps, *, limit=100_000, keep_turns=4, pause=0.0, data_dir=None):
         chat = ScriptedChat(steps=steps, pause=pause)
         session = ChatSession(
             runner,
@@ -211,6 +211,7 @@ def make(runner, retriever):
             Settings(context_limit=limit),
             model=FakeSettings(chat=chat),
             conversation=Conversation(keep_turns=keep_turns),
+            data_dir=data_dir,
         )
         sessions.append(session)
         return session, chat

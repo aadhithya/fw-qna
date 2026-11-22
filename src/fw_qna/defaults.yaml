@@ -1,0 +1,15 @@
+# fw-qna settings. This file is yours: change anything here and the chat reads it the next time it starts.
+# A value that is missing or not valid falls back to the default. To start again, delete this file and a fresh
+# copy is made.
+
+# How many tokens a conversation may use. At 80% of this, the oldest turns move to an archive that the model can
+# search. In the chat, `/context 20000` changes it for you and keeps this file's comments.
+context_limit: 100000
+
+# The colors of the terminal interface, as hex codes.
+colors:
+  user: "#4cc9f0"       # the "You" header and the prompt
+  assistant: "#80ed99"  # the "fw-qna" header and the spinner
+  muted: "#8d99ae"      # searches, sources and the context line
+  accent: "#f9c74f"     # source numbers and commands
+  error: "#ef476f"      # failures, and citations that cannot be verified

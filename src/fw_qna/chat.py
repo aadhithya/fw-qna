@@ -8,7 +8,7 @@ from featherweight import AgentRunner, SqliteDatabase
 from llama_index.core.base.embeddings.base import BaseEmbedding
 from rich.console import Console
 
-from .config import Settings
+from .config import Settings, ensure_config_file
 from .index import Index
 from .retrieval import Retriever
 from .session import ChatSession
@@ -17,6 +17,7 @@ from .ui import ChatUI
 
 def run_chat(data_dir: Path, embedder: BaseEmbedding, console: Console | None = None) -> int:
     console = console or Console()
+    ensure_config_file(data_dir)  # so there is a commented file to edit, even before the first chat
     index = Index(data_dir / "index", embedder)
     if not index.releases():
         console.print("Nothing is indexed yet. Index a release first: make ingest REF=v0.1.0")

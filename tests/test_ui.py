@@ -99,7 +99,7 @@ async def test_help_lists_every_command(start):
     await drive(ui, "/help")
     for command in ("/help", "/sources", "/version", "/context", "/save", "/copy", "/clear", "/exit"):
         assert command in shown(console)
-    assert "settings.json" in shown(console)
+    assert "config.yaml" in shown(console)
 
 
 async def test_exit_and_quit_leave(start):
@@ -122,6 +122,7 @@ async def test_context_shows_and_sets_the_limit_and_keeps_it(start, tmp_path):
     assert "/ 100,000 tokens" in text and "context limit set to 20,000 tokens" in text
     assert text.count("give a number of tokens, at least 1000") == 2
     assert Settings.load(tmp_path / "data").context_limit == 20_000  # kept for the next session
+    assert "kept in config.yaml" in text
 
 
 async def test_a_new_limit_applies_at_once(start):

@@ -1,21 +1,26 @@
-"""The colors of the interface, as hex codes. Change any of them in ``<data dir>/settings.json``:
+"""The colors of the interface, as hex codes. The defaults are in ``defaults.yaml``; to change one, edit
+``<data dir>/config.yaml``:
 
-{"colors": {"user": "#ff8800", "assistant": "#00ccaa"}}
+    colors:
+      user: "#ff8800"
 """
 
-import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
-HEX = re.compile(r"^#[0-9a-fA-F]{6}$")
+from .config import DEFAULTS, HEX
+
+
+def _default(name: str):
+    return field(default_factory=lambda: DEFAULTS["colors"][name])
 
 
 @dataclass(frozen=True)
 class Theme:
-    user: str = "#4cc9f0"  # the "You" header and the prompt
-    assistant: str = "#80ed99"  # the "fw-qna" header and the spinner
-    muted: str = "#8d99ae"  # searches, sources, the context line
-    accent: str = "#f9c74f"  # source numbers and commands
-    error: str = "#ef476f"  # failures and citations that cannot be verified
+    user: str = _default("user")  # the "You" header and the prompt
+    assistant: str = _default("assistant")  # the "fw-qna" header and the spinner
+    muted: str = _default("muted")  # searches, sources, the context line
+    accent: str = _default("accent")  # source numbers and commands
+    error: str = _default("error")  # failures and citations that cannot be verified
 
     @classmethod
     def from_settings(cls, colors: dict[str, str] | None) -> "Theme":

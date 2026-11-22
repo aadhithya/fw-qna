@@ -27,9 +27,13 @@ running it again with nothing changed takes a few seconds.
 Copy `.env.example` to `.env` and put your Anthropic key in it, or export `ANTHROPIC_API_KEY`. The chat model is Claude Haiku 5.5.
 
 In the chat: `/help` lists the commands (`/sources`, `/version`, `/context`, `/save`, `/copy`, `/clear`, `/exit`), and Ctrl-C
-stops an answer. Saved code goes to `saved/` in your data directory. The colors are hex codes you can change in
-`settings.json` in the data directory: `{"colors": {"user": "#ff8800", "assistant": "#00ccaa"}}`; the names are `user`,
-`assistant`, `muted`, `accent` and `error`.
+stops an answer. Saved code goes to `saved/` in your data directory.
+
+**Settings.** The context limit and the colors are in `config.yaml` in your data directory (`./data/fw-qna/config.yaml`
+with `make`). The defaults ship with the package in [`defaults.yaml`](src/fw_qna/defaults.yaml); the first `make chat`
+copies that commented file into your data directory, and it is read every time the chat starts. Edit it, or change the
+limit in the chat with `/context 20000`, which keeps your comments. A value that is not valid falls back to its default,
+and deleting the file gets you a fresh copy.
 
 If `make up` says the model needs a newer Ollama, run `docker compose pull ollama`; `make up` does this for you.
 

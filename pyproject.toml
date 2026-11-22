@@ -5,6 +5,9 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.setuptools.package-data]
+fw_qna = ["defaults.yaml"]
+
 [project]
 name = "fw-qna"
 version = "0.0.0"
@@ -19,6 +22,7 @@ dependencies = [
     "langchain-core",
     "llama-index-core",
     "prompt-toolkit",
+    "pyyaml",
     "rich",
 ]
 

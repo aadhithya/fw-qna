@@ -267,7 +267,7 @@ class ChatUI:
             line.append(f"{name:<24}", style=self.theme.accent)
             line.append(what, style=self.theme.muted)
             self.console.print(line)
-        self._say(f"colors can be changed in {self.data_dir / 'settings.json'}")
+        self._say(f"the colors and the context limit are in {self.data_dir / 'config.yaml'}")
 
     def _sources(self, _: str) -> None:
         citations = self.session.doc_search.citations
@@ -301,7 +301,7 @@ class ChatUI:
                 return self._say("give a number of tokens, at least 1000: /context 20000", self.theme.error)
             self.settings.context_limit = limit
             self.settings.save(self.data_dir)
-            self._say(f"context limit set to {limit:,} tokens. Older turns move to the archive at 80%.")
+            self._say(f"context limit set to {limit:,} tokens, and kept in config.yaml. The archive starts at 80%.")
         used = self.session.conversation.context_tokens()
         limit = self.settings.context_limit
         self._say(f"context {used:,} / {limit:,} tokens ({round(100 * used / limit)}%)")

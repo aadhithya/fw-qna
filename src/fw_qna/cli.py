@@ -8,7 +8,7 @@ from pathlib import Path
 from llama_index.core.base.embeddings.base import BaseEmbedding
 
 from . import __version__
-from .config import resolve_data_dir, write_user_config
+from .config import ConfigError, resolve_data_dir, write_user_config
 from .embedder import EmbeddingError, OllamaGemmaEmbedding
 from .index import Index
 from .ingest import SourceError, ingest_release
@@ -56,7 +56,7 @@ def main(argv: list[str] | None = None) -> int:
     data_dir = resolve_data_dir(args.data_dir)
     try:
         return run(args, data_dir)
-    except (SourceError, EmbeddingError, SearchError) as error:
+    except (SourceError, EmbeddingError, SearchError, ConfigError) as error:
         print(f"error: {error}", file=sys.stderr)
         return 1
 

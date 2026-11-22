@@ -109,6 +109,15 @@ def release_tree(tmp_path_factory) -> Path:
     for i in range(14):
         write(root, f"examples/bigapp/mod{i}.py", "x = 1\n" * 400)
     write(root, "examples/jobs/samples/data.md", "# Sample\n\nnot an example\n")
+    write(
+        root,
+        "skills/featherweight/SKILL.md",
+        "---\nname: featherweight\n"
+        "description: Build agents with featherweight. Use when writing featherweight code.\n---\n\n"
+        "# Building with featherweight\n\nRead references/recipes.md for patterns.\n",
+    )
+    write(root, "skills/featherweight/references/recipes.md", "# Recipes\n\nA fake model for tests.\n")
+    write(root, "skills/not-a-skill/notes.txt", "no SKILL.md here\n")
     return root
 
 

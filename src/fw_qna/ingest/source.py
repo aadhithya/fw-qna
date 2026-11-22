@@ -11,7 +11,7 @@ import tarfile
 from pathlib import Path
 
 RELEASE_TAG = re.compile(r"^v\d+\.\d+\.\d+$")
-PATHS = ("docs", "CHANGELOG.md", "examples")  # what we index; whichever of these the release has
+PATHS = ("docs", "CHANGELOG.md", "examples", "skills")  # what we take; whichever of these the release has
 
 
 class SourceError(ValueError):

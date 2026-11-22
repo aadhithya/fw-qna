@@ -14,3 +14,19 @@ requires-python = ">=3.12"
 dependencies = [
     "llama-index-core",
 ]
+
+[project.scripts]
+fw-qna = "fw_qna.cli:main"
+
+[dependency-groups]
+dev = ["pytest>=8", "ruff>=0.6"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 110
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]

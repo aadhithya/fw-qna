@@ -9,6 +9,11 @@ streaming agents, tools, skills and run log.
 
 **Version 1.0.0.** MIT license.
 
+![fw-qna answering "How do I add support for Ollama Models?": it reads the featherweight skill, searches the docs, writes a commented example, ends with the untested warning and lists its sources](docs/assets/chat.png)
+
+*A real answer. The agent read featherweight's skill and searched the docs, then wrote a short commented example, marked
+its sources with `[1]`, `[2]`, `[3]` and ended with the warning that the code is untested.*
+
 ## What it does
 
 - **Answers from the docs, with citations.** Every answer is based on a search of the documentation, and the sources it

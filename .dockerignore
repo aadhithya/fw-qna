@@ -1,0 +1,9 @@
+.git
+.worktrees
+data
+spikes
+tests
+docs
+**/__pycache__
+.ruff_cache
+.pytest_cache

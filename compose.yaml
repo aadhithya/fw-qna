@@ -1,0 +1,34 @@
+# Everything the app needs runs here. Drive it with make: make up, make ingest, make chat.
+# The data lives in ${FW_QNA_DATA:-./data}: the index, and the Ollama models. You own it.
+name: fw-qna  # one project whichever directory it runs from, so a worktree reuses the same Ollama
+
+services:
+  ollama:
+    image: ollama/ollama:latest
+    volumes:
+      - ${FW_QNA_DATA:-./data}/ollama:/root/.ollama
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  app:
+    build: .
+    image: fw-qna
+    profiles: [tools]  # run on demand with `docker compose run`, not started by `up`
+    depends_on:
+      ollama:
+        condition: service_healthy
+    user: "${FW_QNA_UID:-1000}:${FW_QNA_GID:-1000}"
+    environment:
+      HOME: /tmp
+      FW_QNA_HOME: /data
+      FW_QNA_OLLAMA_URL: http://ollama:11434
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      # git refuses repositories owned by another user, and a mounted clone is one
+      GIT_CONFIG_COUNT: "1"
+      GIT_CONFIG_KEY_0: safe.directory
+      GIT_CONFIG_VALUE_0: "*"
+    volumes:
+      - ${FW_QNA_DATA:-./data}/fw-qna:/data

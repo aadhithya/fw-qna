@@ -6,6 +6,24 @@ It is also a demonstration: the chat agent is built on featherweight itself.
 
 **Status:** planning. See [docs/PRD.md](docs/PRD.md) for the scope and the design questions we are working through.
 
+## Run it
+
+Everything runs in Docker Compose, driven by `make`. You need Docker and `make`.
+
+```
+make up                                  # start Ollama and pull the embedding model (once)
+make ingest REF=v0.1.0                   # index a release; SOURCE=<clone path or git URL>, default ../featherweight
+make versions                            # what is indexed
+make drop REF=v0.1.0                     # remove a release
+make check-embeddings                    # check the real model gives sane vectors
+```
+
+Only release tags (`vX.Y.Z`) are indexed. The index and the Ollama models live in `./data`, or in the directory set by
+`FW_QNA_DATA`, so you control where they are. Ingesting the whole `v0.1.0` takes about two minutes on a laptop CPU, and
+running it again with nothing changed takes a few seconds.
+
+If `make up` says the model needs a newer Ollama, run `docker compose pull ollama`; `make up` does this for you.
+
 ## Development
 
 Everything that runs code runs in Docker, so nothing is installed on your machine. You need Docker, `make` and [pre-commit](https://pre-commit.com). There is no CI: the checks run locally, before each commit.

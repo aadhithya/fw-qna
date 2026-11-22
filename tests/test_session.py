@@ -1,57 +1,12 @@
 import json
 
-import pytest
-from featherweight import AgentRunner, Claude, SqliteDatabase
+from featherweight import Claude
 
-from fakes import FakeSettings, ScriptedChat
+from conftest import SEARCH, URL
 from fw_qna.agent import PROMPT, make_chat_agent
-from fw_qna.config import Settings
 from fw_qna.conversation import Conversation, history_tool
-from fw_qna.index import Index
-from fw_qna.ingest import build_nodes
-from fw_qna.retrieval import Retriever
 from fw_qna.search_tool import DocSearch
-from fw_qna.session import Cancelled, ChatSession, Failed, Finished, Searched, Searching, TextDelta
-
-URL = "https://github.com/acme/widget"
-SEARCH = {"tool": ("search_docs", {"query": "job worker queue", "keywords": ["JobWorker"], "top_k": 3})}
-
-
-@pytest.fixture
-async def runner(tmp_path):
-    async with SqliteDatabase(tmp_path / "runs.db") as db:
-        yield AgentRunner(db)
-
-
-@pytest.fixture
-def retriever(tmp_path, release_tree, words_embedding):
-    (release_tree / "docs/jobs.md").write_text(
-        "# Jobs\n\nThe JobWorker takes a job from the queue and runs it on a worker. " * 6
-    )
-    index = Index(tmp_path / "index", words_embedding)
-    index.add_release("v0.1.0", build_nodes(release_tree, "v0.1.0", URL))
-    return Retriever(index)
-
-
-@pytest.fixture
-def make(runner, retriever):
-    sessions = []
-
-    def factory(steps, *, limit=100_000, keep_turns=4, pause=0.0):
-        chat = ScriptedChat(steps=steps, pause=pause)
-        session = ChatSession(
-            runner,
-            retriever,
-            Settings(context_limit=limit),
-            model=FakeSettings(chat=chat),
-            conversation=Conversation(keep_turns=keep_turns),
-        )
-        sessions.append(session)
-        return session, chat
-
-    yield factory
-    for session in sessions:
-        session.close()
+from fw_qna.session import Cancelled, Failed, Finished, Searched, Searching, TextDelta
 
 
 async def collect(session, text):

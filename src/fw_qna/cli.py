@@ -35,6 +35,7 @@ def build_parser() -> argparse.ArgumentParser:
     ingest.add_argument("--repo-url", help="the https address for citation links")
     ingest.add_argument("--force", action="store_true", help="embed again even if nothing changed")
     commands.add_parser("versions", help="list the indexed releases")
+    commands.add_parser("chat", help="chat about the featherweight docs in the terminal")
     search = commands.add_parser("search", help="search the docs and print what comes back (no model)")
     search.add_argument("query")
     search.add_argument("--keywords", nargs="*", help="exact code names to match")
@@ -72,6 +73,10 @@ def run(args: argparse.Namespace, data_dir: Path) -> int:
             print("Nothing is indexed yet. Run: fw-qna ingest --source <featherweight> --ref v0.1.0")
         for info in index.releases():
             print(f"{info.version} {info.chunks} chunks  {info.model} {info.dimensions}d {info.ingested_at}")
+    elif args.command == "chat":
+        from .chat import run_chat  # imported here: the other commands do not need the interface
+
+        return run_chat(data_dir, make_embedder())
     elif args.command == "search":
         retriever = Retriever(Index(index_path(data_dir), make_embedder()))
         hits = retriever.search(

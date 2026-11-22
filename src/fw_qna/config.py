@@ -7,7 +7,7 @@ the ``--data-dir`` flag, the ``FW_QNA_HOME`` environment variable, the user conf
 
 import json
 import os
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
 DEFAULT_DATA_DIR = Path.home() / ".fw-qna"
@@ -52,6 +52,7 @@ class Settings:
     """Settings kept in ``<data dir>/settings.json``, so they survive between sessions."""
 
     context_limit: int = DEFAULT_CONTEXT_LIMIT
+    colors: dict[str, str] = field(default_factory=dict)  # hex codes that replace the theme's, by name
 
     @classmethod
     def load(cls, data_dir: Path) -> "Settings":

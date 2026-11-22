@@ -18,6 +18,8 @@ dependencies = [
     "lancedb",
     "langchain-core",
     "llama-index-core",
+    "prompt-toolkit",
+    "rich",
 ]
 
 [project.scripts]

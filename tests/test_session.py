@@ -117,3 +117,15 @@ def test_the_agent_has_both_tools_and_a_strict_prompt(retriever):
     for rule in ("never from memory", "[2]", "Never use Mermaid", "minimal", "search_history"):
         assert rule in PROMPT
     conversation.close()
+
+
+def test_the_prompt_always_warns_that_code_is_untested():
+    assert "*Untested example: this code has not been run or checked, so it may not work as written." in PROMPT
+    assert "Every answer that contains code must end with" in PROMPT
+    assert "Never say or suggest that the code works" in PROMPT
+
+
+def test_the_prompt_asks_for_a_draft_when_the_docs_do_not_cover_it():
+    assert "Do not stop at" in PROMPT and "illustrative example" in PROMPT
+    assert "never invent one" in PROMPT  # featherweight API is never made up, even in a draft
+    assert "which are your own design" in PROMPT

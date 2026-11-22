@@ -11,7 +11,7 @@ from conftest import SEARCH
 from fw_qna.chat import run_chat
 from fw_qna.config import Settings
 from fw_qna.theme import Theme
-from fw_qna.ui import ChatUI
+from fw_qna.ui import ChatUI, Tail
 
 CODE_ANSWER = "Use a worker [1].\n\n```python\nprint('worker')\n```\n\nThat is all [9]."
 
@@ -197,3 +197,27 @@ def test_the_chat_needs_the_api_key(tmp_path, retriever, words_embedding, monkey
     console = Console(file=io.StringIO(), force_terminal=False)
     assert run_chat(tmp_path, words_embedding, console) == 1  # the retriever fixture indexed tmp_path/index
     assert "ANTHROPIC_API_KEY is not set" in shown(console)
+
+
+def test_the_live_view_shows_only_the_last_screenful():
+    console = Console(file=io.StringIO(), width=60, height=12, force_terminal=False, color_system=None)
+    console.print(Tail("\n\n".join(f"Paragraph {i} " + "word " * 5 for i in range(1, 41))))
+    shown_lines = console.file.getvalue().splitlines()
+    assert len(shown_lines) <= 9  # the screen is 12 lines high, and the live view must leave room
+    assert any("Paragraph 40" in line for line in shown_lines)
+    assert not any("Paragraph 1 " in line for line in shown_lines)
+
+
+async def test_a_long_answer_is_printed_in_full_exactly_once(start):
+    pieces = [f"Paragraph {i} says something about featherweight.\n\n" for i in range(1, 41)]
+    ui, console, _ = start([{"text": pieces}])
+    await drive(ui, "tell me a lot")
+    text = shown(console)
+    for number in (1, 20, 40):
+        assert text.count(f"Paragraph {number} says") == 1  # a repainting live view would repeat them
+
+
+async def test_text_before_a_search_is_kept_once_and_the_answer_after_it_too(start):
+    ui, console, _ = start([{"text": ["Let me look that up.\n\n"]}, {"text": ["Second part."]}])
+    await drive(ui, "go")
+    assert shown(console).count("Let me look that up.") == 1

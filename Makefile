@@ -1,11 +1,12 @@
 # Everything that runs code runs in Docker. Nothing is installed on the host.
+SHELL := /bin/bash  # the chat target filters compose's stderr with a process substitution
 IMAGE  ?= fw-qna-dev
 # Run as the current user so the files written to the mounted directory are yours, not root's.
 DOCKER_RUN = docker run --rm -u $(shell id -u):$(shell id -g) -e HOME=/tmp -e RUFF_CACHE_DIR=/tmp/ruff \
 	-v "$(CURDIR)":/app -w /app $(IMAGE)
 
 # The app itself: Ollama and the fw-qna commands run in Docker Compose.
-COMPOSE = FW_QNA_UID=$(shell id -u) FW_QNA_GID=$(shell id -g) docker compose
+COMPOSE = FW_QNA_UID=$(shell id -u) FW_QNA_GID=$(shell id -g) COMPOSE_PROFILES=tools docker compose
 MODEL  ?= embeddinggemma-2:270m
 SOURCE ?= ../featherweight
 need-ref = $(if $(REF),,$(error REF is required, e.g. REF=v0.1.0))
@@ -64,8 +65,12 @@ drop: ## remove a release from the index: make drop REF=v0.1.0
 search: up ## search the docs, no chat model: make search Q="how do I define an agent" [ARGS="--keywords JobWorker"]
 	$(COMPOSE) run --build --rm app search "$(Q)" $(ARGS)
 
-chat: up ## chat about the docs (needs ANTHROPIC_API_KEY in your shell or in .env)
-	$(COMPOSE) run --build --rm app chat
+chat: ## chat about the docs (needs ANTHROPIC_API_KEY in your shell or in .env)
+	@# start and build quietly, so the screen is clean when the chat opens; show the output only if it fails
+	@$(MAKE) --no-print-directory up >/dev/null 2>&1 || { $(MAKE) --no-print-directory up; exit 1; }
+	@$(COMPOSE) --progress quiet build app
+	@if [ -t 1 ]; then clear; fi
+	@$(COMPOSE) --progress quiet run --rm app chat 2> >(grep -v 'No services to build' >&2)
 
 check-embeddings: up ## check that the real model gives sane vectors
 	$(COMPOSE) run --build --rm -v "$(CURDIR)/scripts":/scripts:ro --entrypoint python app /scripts/check_embeddings.py

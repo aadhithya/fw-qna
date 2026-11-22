@@ -1,6 +1,6 @@
 # fw-qna: project brief
 
-Status: draft 1. Stage designs are decided one at a time (see [Design log](#design-log)).
+Status: version 1.0.0. The stages were designed one at a time; the decisions and the reasons are in the [design log](#design-log). The README describes the app as it is.
 
 ## 1. What it is
 

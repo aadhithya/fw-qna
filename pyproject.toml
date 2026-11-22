@@ -12,6 +12,7 @@ description = "A terminal RAG chat for the featherweight documentation, built on
 license = "MIT"
 requires-python = ">=3.12"
 dependencies = [
+    "httpx",
     "llama-index-core",
 ]
 
@@ -19,10 +20,12 @@ dependencies = [
 fw-qna = "fw_qna.cli:main"
 
 [dependency-groups]
-dev = ["pytest>=8", "ruff>=0.6"]
+dev = ["pytest>=8", "pytest-asyncio>=0.24", "ruff>=0.6"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
 
 [tool.ruff]
 line-length = 110

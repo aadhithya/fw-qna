@@ -7,9 +7,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends git \
 COPY --from=ghcr.io/astral-sh/uv:0.9 /uv /usr/local/bin/uv
 
 WORKDIR /app
+# The dependencies are their own layer, so a change to our code does not reinstall them.
 COPY pyproject.toml ./
+RUN uv pip install --system --no-cache -r pyproject.toml
 COPY src ./src
-RUN uv pip install --system --no-cache .
+RUN uv pip install --system --no-cache --no-deps .
 
 ENV FW_QNA_HOME=/data
 ENTRYPOINT ["fw-qna"]

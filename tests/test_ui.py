@@ -222,3 +222,38 @@ async def test_text_before_a_search_is_kept_once_and_the_answer_after_it_too(sta
     ui, console, _ = start([{"text": ["Let me look that up.\n\n"]}, {"text": ["Second part."]}])
     await drive(ui, "go")
     assert shown(console).count("Let me look that up.") == 1
+
+
+def test_the_chat_clears_the_screen_when_it_starts_in_a_terminal(tmp_path, retriever, words_embedding, monkeypatch):
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "not-a-real-key")
+    started = []
+
+    async def fake_chat(data_dir, index, console):
+        started.append(console.file.getvalue())
+
+    monkeypatch.setattr("fw_qna.chat._chat", fake_chat)
+    terminal = Console(file=io.StringIO(), force_terminal=True, width=80, color_system=None)
+    assert run_chat(tmp_path, words_embedding, terminal) == 0
+    assert "\x1b[2J" in started[0]  # the clear-screen code was written before the chat began
+
+
+def test_the_chat_does_not_clear_anything_when_the_output_is_not_a_terminal(
+    tmp_path, retriever, words_embedding, monkeypatch
+):
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "not-a-real-key")
+    started = []
+
+    async def fake_chat(data_dir, index, console):
+        started.append(console.file.getvalue())
+
+    monkeypatch.setattr("fw_qna.chat._chat", fake_chat)
+    plain = Console(file=io.StringIO(), force_terminal=False, width=80, color_system=None)
+    assert run_chat(tmp_path, words_embedding, plain) == 0
+    assert started == [""]
+
+
+def test_the_chat_does_not_clear_the_screen_when_it_cannot_start(tmp_path, words_embedding, monkeypatch):
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    terminal = Console(file=io.StringIO(), force_terminal=True, width=80, color_system=None)
+    assert run_chat(tmp_path, words_embedding, terminal) == 1
+    assert "\x1b[2J" not in shown(terminal)  # the reason it could not start stays on screen

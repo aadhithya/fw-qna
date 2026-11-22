@@ -25,6 +25,8 @@ def run_chat(data_dir: Path, embedder: BaseEmbedding, console: Console | None = 
     if not os.environ.get("ANTHROPIC_API_KEY"):
         console.print("ANTHROPIC_API_KEY is not set. The chat model is Claude, and it needs your key.")
         return 1
+    if console.is_terminal:
+        console.clear()  # the make steps that got us here are done: start on a clean screen
     asyncio.run(_chat(data_dir, index, console))
     return 0
 

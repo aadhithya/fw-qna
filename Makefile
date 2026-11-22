@@ -12,7 +12,7 @@ SOURCE ?= https://github.com/aadhithya/featherweight.git
 need-ref = $(if $(REF),,$(error REF is required, e.g. REF=v0.1.0))
 
 .DEFAULT_GOAL := help
-.PHONY: help image lint fmt test check hooks up down ingest versions drop search chat check-embeddings
+.PHONY: help image lint fmt test check hooks ollama-up up pull-model down ingest versions drop search chat check-embeddings
 
 help: ## show the targets
 	@grep -E '^[a-z-]+:.*##' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  make %-17s %s\n", $$1, $$2}'
@@ -37,12 +37,19 @@ hooks: ## install the pre-commit hooks for this clone (worktrees share them)
 	@git config --unset-all core.hooksPath || true
 	pre-commit install
 
-up: ## start Ollama and pull the embedding model (once)
+ollama-up:
 	@mkdir -p "$${FW_QNA_DATA:-data}/ollama" "$${FW_QNA_DATA:-data}/fw-qna"
-	@# a stale local image can be too old for the model, so refresh it (skipped quietly when offline)
-	@$(COMPOSE) pull --quiet ollama || true
 	$(COMPOSE) up -d --wait ollama
-	@$(COMPOSE) exec -T ollama ollama list | grep -q "$(MODEL)" || $(COMPOSE) exec -T ollama ollama pull $(MODEL)
+
+up: ollama-up ## start Ollama and pull the embedding model (once)
+	@$(COMPOSE) exec -T ollama ollama list | grep -q "$(MODEL)" || $(MAKE) --no-print-directory pull-model
+
+pull-model:
+	@# a stale Ollama image can be too old for the model; refresh it only if the pull fails, not on every start
+	@$(COMPOSE) exec -T ollama ollama pull $(MODEL) || { \
+		echo "The pull failed. Refreshing the Ollama image, which may be too old for this model..."; \
+		$(COMPOSE) pull ollama && $(COMPOSE) up -d --force-recreate --wait ollama \
+		&& $(COMPOSE) exec -T ollama ollama pull $(MODEL); }
 
 down: ## stop Ollama (the data stays)
 	$(COMPOSE) down
@@ -66,10 +73,13 @@ search: up ## search the docs, no chat model: make search Q="how do I define an 
 	$(COMPOSE) run --build --rm app search "$(Q)" $(ARGS)
 
 chat: ## chat about the docs (needs ANTHROPIC_API_KEY in your shell or in .env)
-	@# start and build quietly, so the screen is clean when the chat opens; show the output only if it fails
-	@$(MAKE) --no-print-directory up >/dev/null 2>&1 || { $(MAKE) --no-print-directory up; exit 1; }
+	@# Docker's own output is hidden (it is noise), but each step says what it is doing, and the output
+	@# is shown if a step fails. The chat clears the screen itself once it is up.
+	@echo "▸ Starting Ollama (the search needs it to embed your questions)"
+	@$(MAKE) --no-print-directory ollama-up >/dev/null 2>&1 || { $(MAKE) --no-print-directory ollama-up; exit 1; }
+	@echo "▸ Building the chat app"
 	@$(COMPOSE) --progress quiet build app
-	@if [ -t 1 ]; then clear; fi
+	@echo "▸ Starting the chat"
 	@$(COMPOSE) --progress quiet run --rm app chat 2> >(grep -v 'No services to build' >&2)
 
 check-embeddings: up ## check that the real model gives sane vectors

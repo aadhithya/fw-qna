@@ -9,7 +9,7 @@ Status: draft 1. Stage designs are decided one at a time (see [Design log](#desi
 ## 2. Goals
 
 1. **Answer questions** about featherweight quickly and correctly, with citations to the doc pages used.
-2. **Generate example code** that follows the framework's conventions and, where feasible, is checked before it is shown.
+2. **Generate example code** that follows the framework's conventions, grounded in the docs.
 3. **Show the framework off.** The chat agent, and any sub-agents, are featherweight agents: typed, run by `AgentRunner`, streaming, traced. The repo is itself a reference app.
 4. **Know which version it is talking about.** Every indexed chunk carries the featherweight release it came from, and answers say which version they are based on.
 5. **Reuse, don't rebuild.** Every pipeline stage uses an existing library. Our own code is glue and the agent.
@@ -88,9 +88,9 @@ LlamaIndex is the default for ingestion, but each stage can use something else i
 
 **Code generation**
 
-- Examples are grounded in retrieved docs and book code, not invented API.
-- Generated code gets a check before it is shown: at least a syntax parse and import check; ideally a run against featherweight's fake/test models (see Q4).
-- If the check fails, the agent gets the error and retries, using featherweight's own retry model.
+- Examples are grounded in retrieved docs and book code, not invented API. They are minimal, with comments that explain the choices made in the code.
+- There is no code checking. The model's code is shown as it is generated.
+- Diagrams are drawn as simple markdown or text diagrams, not Mermaid.
 
 ## 9. Success criteria and evals
 
@@ -155,6 +155,8 @@ We will go through the stages in this order, and write the decision and the reas
 | Data | A bind-mounted `./data` directory holds the LanceDB index and Ollama's model store, so the user controls and keeps it. The `FW_QNA_HOME` / `--data-dir` setting becomes the container's mount point. | Same goal as before: the user owns the data. |
 | Retrieval | Hybrid search: BM25 (LanceDB full-text) plus vector similarity on the 512d embeddings, merged with reciprocal rank fusion. No reranking. Version filter on every search: the latest indexed release unless the user asks for another (session `/version`, or a per-call argument). Examples capped at one or two per search. | Identifiers like `JobWorker` suit BM25; questions suit embeddings. |
 | `search_docs` tool | `search_docs(query, keywords=None, layer=None, version=None, top_k=5)`. `query` is natural language, embedded for the vector side. `keywords` is an optional list of exact identifiers used only for BM25 (falls back to `query`). Returns text, breadcrumb, citation URL and `code_paths` per hit. Neighbour expansion via `prev_id`/`next_id` is decided with the agent. | Lets the model give each half of the search the input it works best with. |
+| Code checking | None. Generated code is shown as the model wrote it. | Keeps the demo simple. |
+| Chat agent | A strict system prompt, a streaming agent (no output type), and the `search_docs` tool. Design to be confirmed before it is built. | Per the featherweight skill: a chat agent that streams is a `StreamingAgent`. |
 | Chat model | Claude Haiku 5.5 (`claude-haiku-5-5`) for the demo. Any featherweight-supported model can be swapped in. | Shows featherweight's provider flexibility. |
 | Retrieval | A `search_docs` tool the agent chooses to call. Not enforced: no output validation for citations. Grounding comes from a clear tool description and a strict system prompt (any question about featherweight must be answered from `search_docs`, never from memory). | Keeps the demo simple, and is the standard RAG shape. If evals show the model skipping the tool, we revisit (a typed `kind` field with `check_output`, see the discussion). |
 | Embeddings | EmbeddingGemma 2 through Ollama over HTTP, so local, with no PyTorch. | Mixing a local embedder with a hosted chat model is itself a good demo. |

@@ -15,6 +15,7 @@ make up                                  # start Ollama and pull the embedding m
 make ingest REF=v0.1.0                   # index a release; SOURCE=<clone path or git URL>, default ../featherweight
 make versions                            # what is indexed
 make drop REF=v0.1.0                     # remove a release
+make search Q="how do I define an agent"  # try the search, with no chat model (ARGS="--keywords JobWorker")
 make check-embeddings                    # check the real model gives sane vectors
 ```
 

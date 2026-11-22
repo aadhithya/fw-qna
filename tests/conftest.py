@@ -1,4 +1,5 @@
 import hashlib
+import re
 import subprocess
 from pathlib import Path
 
@@ -140,3 +141,22 @@ class FakeEmbedding(BaseEmbedding):
 @pytest.fixture
 def fake_embedding() -> FakeEmbedding:
     return FakeEmbedding(calls=[])
+
+
+class WordsEmbedding(FakeEmbedding):
+    """Texts that share words get similar vectors, so search tests have a meaning to rank by."""
+
+    def _vector(self, text: str) -> list[float]:
+        values = [0.0] * self.dimensions
+        for word in re.findall(r"\w+", text.lower()):
+            values[int(hashlib.sha256(word.encode()).hexdigest(), 16) % self.dimensions] += 1.0
+        norm = sum(v * v for v in values) ** 0.5 or 1.0
+        return [v / norm for v in values]
+
+    async def _aget_query_embedding(self, query: str) -> list[float]:
+        return self._vector(query)
+
+
+@pytest.fixture
+def words_embedding() -> WordsEmbedding:
+    return WordsEmbedding(calls=[])

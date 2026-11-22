@@ -23,6 +23,8 @@ services:
     user: "${FW_QNA_UID:-1000}:${FW_QNA_GID:-1000}"
     environment:
       HOME: /tmp
+      TERM: ${TERM:-xterm-256color}
+      COLORTERM: ${COLORTERM:-truecolor}  # the theme is hex colors
       FW_QNA_HOME: /data
       FW_QNA_OLLAMA_URL: http://ollama:11434
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}

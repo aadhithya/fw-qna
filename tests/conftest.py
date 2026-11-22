@@ -4,7 +4,19 @@ import subprocess
 from pathlib import Path
 
 import pytest
+from featherweight import AgentRunner, SqliteDatabase
 from llama_index.core.base.embeddings.base import BaseEmbedding
+
+from fakes import FakeSettings, ScriptedChat
+from fw_qna.config import Settings
+from fw_qna.conversation import Conversation
+from fw_qna.index import Index
+from fw_qna.ingest import build_nodes
+from fw_qna.retrieval import Retriever
+from fw_qna.session import ChatSession
+
+URL = "https://github.com/acme/widget"
+SEARCH = {"tool": ("search_docs", {"query": "job worker queue", "keywords": ["JobWorker"], "top_k": 3})}
 
 BADGE = "[![docs for](https://img.shields.io/badge/x)](https://pypi.org/)"
 NAV = f"<!-- nav:top -->\n[Book](../README.md) › Page  {BADGE}\n<!-- /nav:top -->\n\n"
@@ -160,3 +172,40 @@ class WordsEmbedding(FakeEmbedding):
 @pytest.fixture
 def words_embedding() -> WordsEmbedding:
     return WordsEmbedding(calls=[])
+
+
+@pytest.fixture
+async def runner(tmp_path):
+    async with SqliteDatabase(tmp_path / "runs.db") as db:
+        yield AgentRunner(db)
+
+
+@pytest.fixture
+def retriever(tmp_path, release_tree, words_embedding):
+    (release_tree / "docs/jobs.md").write_text(
+        "# Jobs\n\nThe JobWorker takes a job from the queue and runs it on a worker. " * 6
+    )
+    index = Index(tmp_path / "index", words_embedding)
+    index.add_release("v0.1.0", build_nodes(release_tree, "v0.1.0", URL))
+    return Retriever(index)
+
+
+@pytest.fixture
+def make(runner, retriever):
+    sessions = []
+
+    def factory(steps, *, limit=100_000, keep_turns=4, pause=0.0):
+        chat = ScriptedChat(steps=steps, pause=pause)
+        session = ChatSession(
+            runner,
+            retriever,
+            Settings(context_limit=limit),
+            model=FakeSettings(chat=chat),
+            conversation=Conversation(keep_turns=keep_turns),
+        )
+        sessions.append(session)
+        return session, chat
+
+    yield factory
+    for session in sessions:
+        session.close()

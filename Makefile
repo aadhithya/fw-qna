@@ -11,7 +11,7 @@ SOURCE ?= ../featherweight
 need-ref = $(if $(REF),,$(error REF is required, e.g. REF=v0.1.0))
 
 .DEFAULT_GOAL := help
-.PHONY: help image lint fmt test check hooks up down ingest versions drop search check-embeddings
+.PHONY: help image lint fmt test check hooks up down ingest versions drop search chat check-embeddings
 
 help: ## show the targets
 	@grep -E '^[a-z-]+:.*##' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  make %-17s %s\n", $$1, $$2}'
@@ -63,6 +63,9 @@ drop: ## remove a release from the index: make drop REF=v0.1.0
 
 search: up ## search the docs, no chat model: make search Q="how do I define an agent" [ARGS="--keywords JobWorker"]
 	$(COMPOSE) run --build --rm app search "$(Q)" $(ARGS)
+
+chat: up ## chat about the docs (needs ANTHROPIC_API_KEY in your shell or in .env)
+	$(COMPOSE) run --build --rm app chat
 
 check-embeddings: up ## check that the real model gives sane vectors
 	$(COMPOSE) run --build --rm -v "$(CURDIR)/scripts":/scripts:ro --entrypoint python app /scripts/check_embeddings.py

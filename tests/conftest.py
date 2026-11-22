@@ -1,7 +1,9 @@
+import hashlib
 import subprocess
 from pathlib import Path
 
 import pytest
+from llama_index.core.base.embeddings.base import BaseEmbedding
 
 BADGE = "[![docs for](https://img.shields.io/badge/x)](https://pypi.org/)"
 NAV = f"<!-- nav:top -->\n[Book](../README.md) › Page  {BADGE}\n<!-- /nav:top -->\n\n"
@@ -106,3 +108,35 @@ def repo(release_tree) -> Path:
     git(release_tree, "commit", "-q", "-m", "initial")
     git(release_tree, "tag", "v0.1.0")
     return release_tree
+
+
+class FakeEmbedding(BaseEmbedding):
+    """A stand-in for Ollama: the same text always gives the same unit vector, and nothing is called."""
+
+    dimensions: int = 512
+    model_name: str = "fake-embedding"
+    calls: list = []  # every batch of texts that was embedded
+
+    def _vector(self, text: str) -> list[float]:
+        raw = (hashlib.sha256(text.encode()).digest() * 40)[: self.dimensions]
+        values = [b - 127.5 for b in raw]
+        norm = sum(v * v for v in values) ** 0.5
+        return [v / norm for v in values]
+
+    def _get_query_embedding(self, query: str) -> list[float]:
+        return self._vector(query)
+
+    async def _aget_query_embedding(self, query: str) -> list[float]:
+        return self._vector(query)
+
+    def _get_text_embedding(self, text: str) -> list[float]:
+        return self._vector(text)
+
+    def _get_text_embeddings(self, texts: list[str]) -> list[list[float]]:
+        self.calls.append(list(texts))
+        return [self._vector(t) for t in texts]
+
+
+@pytest.fixture
+def fake_embedding() -> FakeEmbedding:
+    return FakeEmbedding(calls=[])

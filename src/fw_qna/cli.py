@@ -33,7 +33,7 @@ def build_parser() -> argparse.ArgumentParser:
     init.add_argument("path", nargs="?", help="the data directory (default: the current setting)")
     ingest = commands.add_parser("ingest", help="index one release of the featherweight docs")
     ingest.add_argument("--source", required=True, help="a git URL or a local clone of featherweight")
-    ingest.add_argument("--ref", required=True, help="a release tag, like v0.1.0 (branches are refused)")
+    ingest.add_argument("--ref", required=True, help="a release tag, like v0.2.0 (branches are refused)")
     ingest.add_argument("--repo-url", help="the https address for citation links")
     ingest.add_argument("--force", action="store_true", help="embed again even if nothing changed")
     commands.add_parser("versions", help="list the indexed releases")
@@ -48,7 +48,7 @@ def build_parser() -> argparse.ArgumentParser:
     evaluate_.add_argument("--questions", required=True, help="the question file, like evals/retrieval.yaml")
     evaluate_.add_argument("--version", help="override the release named in the file")
     drop = commands.add_parser("drop", help="remove one release from the index")
-    drop.add_argument("ref", help="the release tag, like v0.1.0")
+    drop.add_argument("ref", help="the release tag, like v0.2.0")
     return parser
 
 
@@ -77,7 +77,7 @@ def run(args: argparse.Namespace, data_dir: Path) -> int:
     elif args.command == "versions":
         index = Index(index_path(data_dir), make_embedder())
         if not index.releases():
-            print("Nothing is indexed yet. Run: fw-qna ingest --source <featherweight> --ref v0.1.0")
+            print("Nothing is indexed yet. Run: fw-qna ingest --source <featherweight> --ref v0.2.0")
         for info in index.releases():
             print(f"{info.version} {info.chunks} chunks  {info.model} {info.dimensions}d {info.ingested_at}")
     elif args.command == "chat":

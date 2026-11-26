@@ -20,7 +20,7 @@ def run_chat(data_dir: Path, embedder: BaseEmbedding, console: Console | None = 
     ensure_config_file(data_dir)  # so there is a commented file to edit, even before the first chat
     index = Index(data_dir / "index", embedder)
     if not index.releases():
-        console.print("Nothing is indexed yet. Index a release first: make ingest REF=v0.1.0")
+        console.print("Nothing is indexed yet. Index a release first: make ingest REF=v0.2.0")
         return 1
     if not os.environ.get("ANTHROPIC_API_KEY"):
         console.print("ANTHROPIC_API_KEY is not set. The chat model is Claude, and it needs your key.")

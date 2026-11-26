@@ -78,7 +78,7 @@ def test_a_wrong_question_file_says_what_is_wrong(tmp_path, text, message):
 
 def test_the_real_question_file_is_well_formed():
     version, questions = load_questions(QUESTIONS)
-    assert version == "v0.1.0" and 15 <= len(questions) <= 25
+    assert version == "v0.2.0" and 15 <= len(questions) <= 25
     for q in questions:
         assert q.question.endswith("?") and q.expected
         assert all(p.startswith(("docs/", "examples/")) or p == "CHANGELOG.md" for p in q.expected), q.id

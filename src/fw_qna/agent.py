@@ -72,7 +72,11 @@ Style
 class DocsChat(StreamingAgent):
     name: str = "fw_qna_chat"
     description: str = "Answers questions about the featherweight docs, and writes example code for it"
-    version: str = "1"  # change it when the prompt or the behaviour changes: runs are told apart by it
+    version: str = "2"  # change it when the prompt or the behaviour changes: runs are told apart by it
+    # featherweight takes files in a chat by default and sends them to the model's provider. This chat has no way
+    # to attach one, so a conversation that holds a file is refused. No annotation here: featherweight declares it
+    # as a class variable, and "max_attachments: int = 0" would make a new field that its limit check never reads.
+    max_attachments = 0
     prompt: str = PROMPT
     model: ModelSettings = Claude(model="claude-haiku-5-5", effort="low", thinking="off")
 

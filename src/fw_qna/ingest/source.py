@@ -20,7 +20,7 @@ class SourceError(ValueError):
 
 def check_tag(tag: str) -> str:
     if not RELEASE_TAG.match(tag):
-        raise SourceError(f"{tag!r} is not a release tag. Use a tag like v0.1.0, not a branch or a commit.")
+        raise SourceError(f"{tag!r} is not a release tag. Use a tag like v0.2.0, not a branch or a commit.")
     return tag
 
 

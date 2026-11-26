@@ -24,7 +24,7 @@ sentence does. If the results are thin, search again with other words.
 
 `layer` narrows the search: book (tutorial, in order), guide (how to do X), spec (what exactly it does and \
 why), example (whole runnable examples, with code), changelog (what changed in each release). Leave it empty \
-to search everything. `version` is a release like v0.1.0; leave it empty for the latest indexed release, and \
+to search everything. `version` is a release like v0.2.0; leave it empty for the latest indexed release, and \
 use it only when the user asks about another one.
 
 Each result has a reference number. Cite it as [n] after every claim, paragraph or code block that relies \
@@ -40,7 +40,7 @@ class SearchArgs(BaseModel):
         default=None, description="Search only one layer of the docs."
     )
     version: str | None = Field(
-        default=None, description="A release like v0.1.0. Empty means the latest indexed release."
+        default=None, description="A release like v0.2.0. Empty means the latest indexed release."
     )
     top_k: int = Field(default=5, ge=1, le=10, description="How many results to return.")
 

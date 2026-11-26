@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Any
 
 from ag_ui.core import EventType
-from featherweight import AgentRunner, ChatInput, ModelSettings, RunStatus
+from featherweight import AgentRunner, ChatInput, ModelSettings, Status
 from langchain_core.messages import HumanMessage
 
 from .agent import make_chat_agent
@@ -187,12 +187,12 @@ class ChatSession:
                         error = event.message
         finally:
             self._run = None
-            if run.new_messages or run.status != RunStatus.FAILED:
+            if run.new_messages or run.status != Status.FAILED:
                 self.conversation.add_turn(user, run.new_messages)
         answer = "".join(written)
-        if run.status == RunStatus.CANCELLED:
+        if run.status == Status.CANCELLED:
             yield Cancelled(answer)
-        elif run.status == RunStatus.FAILED:
+        elif run.status == Status.FAILED:
             yield Failed(error or str(run.error) or "the model call failed")
         else:
             yield self._finished(answer, retrieved, run, skill_reads)
@@ -213,10 +213,15 @@ class ChatSession:
 
 
 def _skill_error(text: str) -> bool:
-    """What ``get_skill`` says when the skill or the file does not exist. It never raises."""
+    """What ``get_skill`` says when it has nothing to give: no such skill or file, or the read failed.
+
+    It never raises, so these replies are the only sign that nothing was read.
+    """
     unknown_skill = "is not one of your skills" in text[:150]
-    unknown_file = text.startswith("The skill '") and " has no file " in text[:200]
-    return unknown_skill or unknown_file
+    no_content = text.startswith("The skill '") and any(
+        reply in text[:200] for reply in (" has no file ", " could not be read: ")
+    )
+    return unknown_skill or no_content
 
 
 def _parse(text: str) -> dict[str, Any]:

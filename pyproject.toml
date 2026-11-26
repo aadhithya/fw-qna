@@ -10,13 +10,13 @@ fw_qna = ["defaults.yaml"]
 
 [project]
 name = "fw-qna"
-version = "1.0.0"
+version = "2.0.0"
 description = "A terminal RAG chat for the featherweight documentation, built on featherweight."
 license = "MIT"
 requires-python = ">=3.12"
 dependencies = [
     "bm25s",
-    "featherweight[anthropic]>=0.1.0",
+    "featherweight[anthropic]>=0.2,<0.3",  # a minor release can break: raise this by hand
     "httpx",
     "lancedb",
     "langchain-core",

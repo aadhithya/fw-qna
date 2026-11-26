@@ -9,7 +9,7 @@
 # is a measurement, not a target: do not change the questions or the pipeline to make the numbers better.
 # Run it with `make eval`. Edit freely: a wrong expectation is a bug in this file.
 
-version: v0.1.0
+version: v0.2.0
 
 questions:
   - id: define-agent
@@ -41,6 +41,7 @@ questions:
       - docs/models.md
       - docs/specs/models.md
       - docs/book/01-your-first-agent/06-choosing-a-model.md
+      - docs/recipes/a-different-provider.md
 
   - id: ollama
     question: How do I add support for Ollama models?
@@ -56,6 +57,7 @@ questions:
       - docs/specs/mcp-tools.md
       - docs/book/02-abilities/02-mcp.md
       - examples/mcp
+      - docs/recipes/an-agent-with-an-mcp-server.md
 
   - id: skills
     question: How do I give an agent skills?
@@ -71,6 +73,7 @@ questions:
       - docs/launching-agents.md
       - docs/book/02-abilities/04-sub-agents.md
       - examples/launching
+      - docs/recipes/an-agent-that-launches-another.md
 
   - id: submit-job
     question: How do I submit a job and have a worker run it?
@@ -79,6 +82,7 @@ questions:
       - docs/specs/submitted-jobs.md
       - docs/book/05-in-production/01-submit-and-a-worker.md
       - examples/jobs
+      - docs/recipes/a-job-that-a-worker-runs.md
 
   - id: several-workers
     question: How many workers can I run on one queue?
@@ -95,6 +99,8 @@ questions:
       - docs/agents.md
       - docs/book/03-jobs-and-pipelines/04-resume.md
       - examples/resume
+      - docs/recipes/resuming-a-failed-job.md
+      - docs/jobs.md
 
   - id: streaming-chat
     question: How do I build a chat agent that streams its answer?
@@ -103,6 +109,7 @@ questions:
       - docs/specs/streaming.md
       - docs/book/04-chat/01-a-streaming-agent.md
       - examples/chat
+      - docs/recipes/a-chat-agent-that-streams.md
 
   - id: stop-response
     question: How do I stop a streaming response while it is being written?
@@ -119,6 +126,7 @@ questions:
       - docs/specs/observability.md
       - docs/book/05-in-production/04-observability.md
       - examples/observability
+      - docs/recipes/traces-for-jobs-and-agents.md
 
   - id: own-queue
     question: How do I write my own job queue?
@@ -137,10 +145,11 @@ questions:
   - id: background-agent
     question: How does a chat start an agent in the background and carry on?
     expected:
-      - docs/background-agents.md
-      - docs/specs/background-agents.md
-      - docs/book/05-in-production/03-background-agents.md
+      - docs/background-jobs.md
+      - docs/specs/background-jobs.md
+      - docs/book/05-in-production/03-background-jobs.md
       - examples/background
+      - docs/recipes/an-agent-that-starts-another-and-goes-on.md
 
   - id: first-release
     question: What changed in the first release?
@@ -158,3 +167,23 @@ questions:
     expected:
       - docs/book/00-start-here/03-philosophy.md
       - docs/book/00-start-here/01-what-it-is.md
+
+  - id: upgrade
+    question: How do I upgrade a project that uses an older featherweight?
+    expected:
+      - docs/migration.md
+
+  - id: attachments
+    question: How do I attach an image or a PDF to a chat message?
+    expected:
+      - docs/streaming.md
+      - docs/specs/attachments.md
+      - docs/book/04-chat/04-attaching-a-file.md
+      - docs/attachments-providers.md
+
+  - id: approvals
+    question: How do I make a person approve an action before an agent takes it?
+    expected:
+      - docs/book/05-in-production/06-approvals.md
+      - docs/specs/approvals.md
+      - docs/recipes/approving-what-an-agent-proposes.md

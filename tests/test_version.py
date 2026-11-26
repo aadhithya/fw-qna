@@ -9,8 +9,8 @@ def test_the_package_and_pyproject_have_the_same_version():
     assert __version__ == pyproject["project"]["version"]
 
 
-def test_the_version_is_one_point_zero():
-    assert __version__ == "1.0.0"
+def test_the_version_is_two_point_zero():
+    assert __version__ == "2.0.0"
 
 
 def test_the_command_line_reports_it(capsys):

@@ -59,7 +59,7 @@ print("hello")
 )
 CHANGELOG = """# Changelog
 
-## 0.2.0 (2026-12-01)
+## [0.2.0](https://github.com/o/r/compare/v0.1.0...v0.2.0) (2026-12-01)
 
 ### Features
 

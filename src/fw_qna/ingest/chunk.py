@@ -157,12 +157,14 @@ def changelog_pieces(root: Path) -> list[Piece]:
     path = root / "CHANGELOG.md"
     if not path.is_file():
         return []
-    entries = re.split(r"(?m)^(?=## \d)", clean_changelog(path.read_text()))
+    # The first release is "## 0.1.0 (date)"; later ones are "## [0.2.0](compare link) (date)".
+    entries = re.split(r"(?m)^(?=## \[?\d)", clean_changelog(path.read_text()))
     pieces = []
     for entry in entries:
-        match = re.match(r"## (\d+\.\d+\.\d+)", entry)
+        match = re.match(r"## \[?(\d+\.\d+\.\d+)", entry)
         if match:
-            heading = entry.splitlines()[0].removeprefix("## ")
+            # the heading as GitHub shows it, without the link: its anchor is made from this text
+            heading = re.sub(r"\[([^\]]+)\]\([^)]*\)", r"\1", entry.splitlines()[0].removeprefix("## "))
             pieces.append(
                 Piece(
                     entry.strip(),

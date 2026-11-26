@@ -120,6 +120,24 @@ def test_the_changelog_is_one_chunk_per_release_without_hashes(nodes):
     assert entries[0].metadata["url"].endswith("CHANGELOG.md#020-2026-12-01")
 
 
+def test_a_later_release_is_not_lost_because_its_heading_is_a_link(nodes):
+    # release-please writes every release after the first as "## [0.2.0](compare link) (date)"
+    later = next(n for n in by_path(nodes, "CHANGELOG.md") if n.metadata["release"] == "0.2.0")
+    assert later.metadata["breadcrumb"] == "Changelog > 0.2.0 (2026-12-01)"
+    assert "a new thing" in later.text and "the first thing" not in later.text
+
+
+def test_the_comment_markers_are_removed_and_the_text_between_them_stays():
+    page = "# T\n\n<!-- toc -->\n1. one\n<!-- /toc -->\n\n<!-- skill:omit -->\n- kept\n<!-- /skill -->\n"
+    cleaned = clean_page(page)
+    assert "<!--" not in cleaned
+    assert "1. one" in cleaned and "- kept" in cleaned
+
+
+def test_a_comment_inside_a_sentence_is_left_alone():
+    assert "<!-- toc -->" in clean_page("Write `<!-- toc -->` to mark the contents.")
+
+
 def test_an_example_directory_is_one_chunk_with_its_code(nodes):
     (jobs,) = by_path(nodes, "examples/jobs")
     assert "Run a job on a worker." in jobs.text and "print('run')" in jobs.text

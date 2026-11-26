@@ -7,18 +7,18 @@ It does two jobs. It is a quick way to learn the framework: ask "how do I run jo
 links to the pages it came from. And it is a demonstration: the chat agent is built on featherweight itself, and uses its
 streaming agents, tools, skills and run log.
 
-**Version 1.0.0.** MIT license.
+**Version 2.0.0**, built on featherweight 0.2. MIT license.
 
 ![fw-qna answering "How do I add support for Ollama Models?": it reads the featherweight skill, searches the docs, writes a commented example, ends with the untested warning and lists its sources](docs/assets/chat.png)
 
-*A real answer. The agent read featherweight's skill and searched the docs, then wrote a short commented example, marked
+*A real answer, from version 1.0.0. The agent read featherweight's skill and searched the docs, then wrote a short commented example, marked
 its sources with `[1]`, `[2]`, `[3]` and ended with the warning that the code is untested.*
 
 ## What it does
 
 - **Answers from the docs, with citations.** Every answer is based on a search of the documentation, and the sources it
   used are listed under it, with links to the page and section on GitHub, at the release you asked about.
-- **Knows which version it is talking about.** Docs are indexed per release tag (`v0.1.0`, ...), and a chat answers from
+- **Knows which version it is talking about.** Docs are indexed per release tag (`v0.2.0`, ...), and a chat answers from
   one release at a time: the latest by default, or another with `/version`.
 - **Writes example code, and says it is untested.** When you ask how to build something, it drafts a minimal, commented
   example from the documented building blocks, even when the docs do not cover that exact thing (a Postgres job queue, say).
@@ -38,12 +38,12 @@ You need Docker and `make`. Nothing else is installed on your machine: everythin
 
 ```
 cp .env.example .env      # put your Anthropic API key in it (or export ANTHROPIC_API_KEY)
-make ingest REF=v0.1.0    # starts Ollama, pulls the embedding model (once), indexes the docs and the skill
+make ingest REF=v0.2.0    # starts Ollama, pulls the embedding model (once), indexes the docs and the skill
 make chat
 ```
 
 `make ingest` clones the release tag from [featherweight on GitHub](https://github.com/aadhithya/featherweight) (public,
-no login needed). The first run downloads the Ollama image and the embedding model, and indexing `v0.1.0` takes about two
+no login needed). The first run downloads the Ollama image and the embedding model, and indexing `v0.2.0` takes a few
 minutes on a laptop CPU. Running it again with nothing changed takes a few seconds. Only release tags (`vX.Y.Z`) are
 indexed: a branch or a commit is refused, so the index always matches what was published.
 
@@ -51,6 +51,12 @@ Each chat turn calls Claude, which is billed to your Anthropic account. Indexing
 
 Good first questions: "how do I define an agent?", "what does check_output do?", "how do I build a Redis job queue?", and
 "hi", which gets a reply without a search.
+
+### Coming from fw-qna 1.x
+
+Version 2.0.0 needs featherweight 0.2 and does not try to stay compatible with 1.x. Start with a fresh index and run log:
+move `data/fw-qna/index`, `data/fw-qna/skills` and `data/fw-qna/runs.db` out of the way (or point `FW_QNA_DATA` at a new
+directory), then run `make ingest REF=v0.2.0`. Your `config.yaml` and the downloaded embedding model can stay.
 
 ## Using the chat
 
@@ -78,9 +84,9 @@ render Mermaid.
 | Target | What it does |
 |---|---|
 | `make up` | start Ollama and pull the embedding model (once) |
-| `make ingest REF=v0.1.0` | index a release and its skill. `SOURCE=<git url or local clone>` changes where it is read from |
+| `make ingest REF=v0.2.0` | index a release and its skill. `SOURCE=<git url or local clone>` changes where it is read from |
 | `make versions` | list the indexed releases |
-| `make drop REF=v0.1.0` | remove a release, with its skill, from the index |
+| `make drop REF=v0.2.0` | remove a release, with its skill, from the index |
 | `make search Q="..."` | try the search with no chat model. `ARGS="--keywords JobWorker"` adds exact names to match |
 | `make chat` | chat about the docs |
 | `make eval` | measure retrieval over [evals/retrieval.yaml](evals/retrieval.yaml): recall@k and MRR. Local only, no chat model |
@@ -97,7 +103,7 @@ Everything the app keeps is in one directory: `./data`, or the directory set by 
 data/
   fw-qna/
     index/            the LanceDB index of every release you ingested
-    skills/v0.1.0/    that release's skill, and where it came from
+    skills/v0.2.0/    that release's skill, and where it came from
     config.yaml       your settings
     saved/            code saved with /save
     runs.db           featherweight's run log (metadata only, no message content)
@@ -142,25 +148,28 @@ The design, the decisions and the reasons behind them are in [docs/PRD.md](docs/
 
 ## Retrieval quality
 
-`make eval` runs 20 questions with the pages that answer them ([evals/retrieval.yaml](evals/retrieval.yaml)) through the
+`make eval` runs 23 questions with the pages that answer them ([evals/retrieval.yaml](evals/retrieval.yaml)) through the
 same search the chat uses, and measures where the first good page lands. A question counts as found at *k* when one of its
 acceptable pages is among the first *k* results; MRR is the average of 1 / (that rank). It needs only the local embedding
 model, so it costs nothing and makes no API calls.
 
-On the `v0.1.0` docs, as of version 1.0.0:
+On the `v0.2.0` docs, as of version 2.0.0:
 
 | recall@1 | recall@3 | recall@5 | recall@10 | MRR |
 |---|---|---|---|---|
-| 0.80 | 0.95 | 0.95 | 0.95 | 0.875 |
+| 0.83 | 0.96 | 0.96 | 0.96 | 0.884 |
 
-17 of the 20 questions have a good page at rank 1. The one miss is "What changed in the first release?": the changelog is a
-single chunk that the search does not surface for that wording, and the chat gets around it because the tool description
-tells the model to use the `changelog` layer for questions about releases. The questions were written from the docs' titles
-and headings, not from what the search returns, and the pipeline is not tuned against them: this is a measurement, not a
-target. Evaluating the generated answers would need real model calls, so it is not done yet.
+19 of the 23 questions have a good page at rank 1. The one miss is "What changed in the first release?": the changelog
+entry for it is one long chunk that the search does not surface for that wording. Searching the `changelog` layer finds the
+entries, and the tool description tells the model what that layer is for. The expected pages were chosen from the docs'
+titles and headings before the run, not from what the search returns, and the pipeline is not tuned against them: this is a
+measurement, not a target. These scores are not comparable with the ones for version 1.0.0, because both the docs and the
+questions changed. Evaluating the generated answers would need real model calls, so it is not done yet.
 
 ## Limits
 
+- **No file attachments.** featherweight 0.2 takes files in a chat by default. This one refuses them
+  (`max_attachments = 0`).
 - **The code is not tested.** The model cannot run it, and it says so. Treat it as a sketch.
 - **The warning and the citations come from the prompt.** Nothing enforces them, so a model can still forget one. Sources
   are always built from what the search tool returned, so a link is never made up, but a model can use a result without
